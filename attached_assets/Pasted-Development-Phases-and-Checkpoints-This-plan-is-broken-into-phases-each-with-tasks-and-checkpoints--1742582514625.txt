@@ -1,0 +1,104 @@
+Development Phases and Checkpoints
+This plan is broken into phases, each with tasks and checkpoints to ensure Blayz is built systematically and functions correctly. Follow these steps in order.
+
+Phase 1: Project Setup and Authentication
+1.1 Set Up Front-End (Next.js)
+Task: Initialize a Next.js project with Tailwind CSS and integrate the brand color #FE8401 as the primary color. Set up a basic folder structure for pages, components, and styles.
+Checkpoint:
+Launch the development server and verify the default page loads in the browser.
+Add a styled button using the brand color and confirm it displays as orange (#FE8401).
+1.2 Set Up Back-End (FastAPI)
+Task: Initialize a FastAPI project with necessary dependencies and create a basic health check endpoint.
+Checkpoint:
+Start the server and test the health check endpoint using a tool like Postman or a browser. Expect a simple “ok” response.
+1.3 Configure Supabase (Database and Authentication)
+Task: Set up Supabase authentication with email/password and Meta OAuth options. Verify the existing tables and add a new rules table for the custom rules engine.
+Checkpoint:
+Sign up a test user through the Supabase authentication system and confirm they appear in the users table.
+Insert a test rule into the rules table and query it to ensure it’s stored correctly.
+1.4 Implement User Authentication (Front-End)
+Task: Integrate Supabase authentication into Next.js, creating login and signup pages with forms to handle user authentication flows.
+Checkpoint:
+Test the signup and login processes. Refresh the page to confirm the user session persists in the browser.
+Phase 2: Meta Ads Integration
+2.1 Back-End: Meta Ads OAuth Flow
+Task: Implement the OAuth flow for Meta Ads, including an endpoint to generate the OAuth URL and another to handle the redirect, exchange the code for a token, and store it securely.
+Checkpoint:
+Manually test the OAuth process by connecting an ad account and verify the token is saved in the user_facebook_tokens table.
+2.2 Front-End: Connect Meta Account
+Task: Add a “Connect Meta” button on an accounts page, using a Next.js API route to proxy requests to the FastAPI backend. Update the UI to reflect connection status.
+Checkpoint:
+Click the “Connect Meta” button, complete the OAuth flow, and confirm the UI updates to show a connected state.
+2.3 Back-End: Fetch Ad Data
+Task: Implement endpoints to fetch ad accounts, campaigns, ad sets, ads, and insights from the Meta Ads API, storing the data in the appropriate Supabase tables with your specified metrics.
+Checkpoint:
+Call the ad accounts endpoint and verify that data is fetched and stored correctly in Supabase.
+2.4 Front-End: Display Ad Data
+Task: Build a dashboard page to display ad accounts and campaigns, fetching data from the FastAPI backend and rendering it in a table or list format.
+Checkpoint:
+Visit the dashboard page and confirm that ad data is displayed accurately.
+Phase 3: Custom Rules Engine and Optimization
+3.1 Back-End: Custom Rules Engine
+Task: Enable users to define weighted rules by implementing CRUD endpoints for the rules table, allowing creation, reading, updating, and deletion of rules with conditions, actions, and weights.
+Checkpoint:
+Add a sample rule through the API and verify it’s stored in the rules table.
+3.2 Back-End: Analyze Data and Generate Suggestions
+Task: Implement optimization logic to analyze ad insights using the custom rules, generating suggestions (e.g., target Android devices) or applying changes if in autopilot mode, storing results in the actions table.
+Checkpoint:
+Run the optimization endpoint on sample data and confirm that suggestions are generated and stored correctly.
+3.3 Front-End: Rules Management
+Task: Build a rules management page where users can add, edit, and delete rules, including fields for conditions, actions, and weights.
+Checkpoint:
+Add a rule through the UI and confirm it’s saved in Supabase.
+3.4 Front-End: Suggestions and Autopilot Toggle
+Task: Add a toggle on the dashboard for “Autopilot” versus “Suggestive” mode, displaying suggestions in Suggestive mode or triggering automatic actions in Autopilot mode.
+Checkpoint:
+Switch between modes and verify the correct behavior: suggestions appear in Suggestive mode, and actions are applied in Autopilot mode.
+Phase 4: Dashboard and Metrics Visualization
+4.1 Front-End: Interactive Dashboard
+Task: Enhance the dashboard with visualizations and filters, displaying your specified metrics (e.g., spend, impressions, ctr, roas) and breakdowns (e.g., age, gender, platform) using charts and interactive elements.
+Checkpoint:
+Load the dashboard and confirm that metrics and charts render correctly with sample data.
+4.2 Back-End: Metrics Aggregation
+Task: Create an endpoint to aggregate ad insights data by date, platform, or other breakdowns, optimizing queries for performance.
+Checkpoint:
+Test the endpoint with sample data and ensure the response time is under 2 seconds.
+Phase 5: Security and User Experience
+5.1 Secure the Application
+Task: Implement security measures including HTTPS, secure JWT handling in FastAPI, and Supabase row-level security to restrict users to their own data.
+Checkpoint:
+Attempt to access another user’s data and confirm access is denied.
+5.2 Optimize Performance
+Task: Improve load times by adding database indexes to frequently queried fields (e.g., campaign_id, date) and leveraging Next.js optimization features.
+Checkpoint:
+Test the dashboard with 1,000 rows of data and verify load time is under 2 seconds.
+5.3 Enhance User Experience
+Task: Polish the UI with consistent use of #FE8401 for buttons and highlights, adding tooltips for metrics and loading states for data fetches.
+Checkpoint:
+Navigate the app and confirm it feels intuitive and visually cohesive with the Blayz branding.
+Phase 6: Deployment
+6.1 Deploy Front-End to Netlify
+Task: Set up Netlify for the Next.js front-end, connecting it to a Git repository and configuring environment variables for Supabase and the FastAPI backend URL.
+Checkpoint:
+Visit the Netlify URL and verify the app loads correctly.
+6.2 Deploy Back-End to AWS Elastic Beanstalk
+Task: Deploy the FastAPI backend to AWS Elastic Beanstalk, setting environment variables for Supabase and Meta credentials.
+Checkpoint:
+Test the deployed API endpoints and confirm they respond as expected.
+6.3 Set Up CI/CD
+Task: Configure GitHub Actions to automate testing and deployment when changes are pushed to the main branch.
+Checkpoint:
+Push a change to the repository and confirm the CI/CD pipeline completes successfully.
+Phase 7: Testing and Quality Assurance
+7.1 Unit and Integration Tests
+Task: Write unit and integration tests for the front-end (login, rules form) and back-end (optimization, rules endpoints) using appropriate testing frameworks.
+Checkpoint:
+Run the test suite and ensure at least 80% coverage of critical features.
+7.2 End-to-End Tests
+Task: Implement end-to-end tests covering signup, Meta connection, rules creation, and dashboard usage with a testing tool like Cypress.
+Checkpoint:
+Run the end-to-end tests and confirm all key flows pass without errors.
+Additional Notes
+Version Control: Use Git with feature branches (e.g., feature/auth, feature/rules) for each phase.
+Environment Variables: Store sensitive keys in environment files locally and securely in Netlify and AWS for production.
+Documentation: Maintain a README.md with setup instructions, API documentation, and an overview of Blayz’s features.

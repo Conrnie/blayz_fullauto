@@ -1,0 +1,10 @@
+The regular expression pattern (?s)// Step 4: Analyze each segment type individually.*?for \(const segme
+ntType of segmentTypes\) \{.*?console.log\(\\[REPORT_GEN_API\] Completed analysis of \$\{segmentType\} s
+egments\\);.*?\} is not valid.
+At line:1 char:1
++ (Get-Content -Raw pages/api/generate-campaign-report.js) -replace '(? ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : InvalidOperation: ((?s)// Step 4: ...gments\\);.*?\}:String) [], RuntimeE 
+   xception
+    + FullyQualifiedErrorId : InvalidRegularExpression
+ 

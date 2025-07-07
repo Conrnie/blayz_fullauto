@@ -1,0 +1,31 @@
+[build]
+  base = "frontend"
+  command = "npm install && npm run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_PUBLIC_SUPABASE_URL = "https://zrsevaevonthrspehpaj.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpyc2V2YWV2b250aHJzcGVocGFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3NzAyOTcsImV4cCI6MjA1NzM0NjI5N30.KqKjrspzqP0aAmL-zIRbrFpyy9t04rL_R4XokBZP3Qg"
+  SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpyc2V2YWV2b250aHJzcGVocGFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTc3MDI5NywiZXhwIjoyMDU3MzQ2Mjk3fQ.06TCwsqt9TmtBCZRj92AEUoEGqvExjA2L77gE_sBfRI"
+  SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpyc2V2YWV2b250aHJzcGVocGFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTc3MDI5NywiZXhwIjoyMDU3MzQ2Mjk3fQ.06TCwsqt9TmtBCZRj92AEUoEGqvExjA2L77gE_sBfRI"
+  SUPABASE_JWT_SECRET = "rXyPZmdL1/+Dg1xD9DTmC3m2dczwYWF/K3OZT20Q7zxSrqnGn1ozKuSIaP0RAo0Ay8SLuYp68Ou5VzrHRlIcoQ=="
+  REQUESTY_API_KEY = "sk-9vGCjRMSSgy6ot0q93ukKj3uQuygCyXuGV4Hh6SsRaE22ZhgFRceqmB6xbF72lvg4J50nPmm5PbZRVaSOAL7HqjLPxUKcdox8W2udiq/Lwk="
+  CHUTES_API_TOKEN = "cpk_1211b5b0a49e40fc921f522b8861c4ab.e50cfab0bef253288ae966000710bc6c.MXpR83MuA5FUVaaVivgkwN8P2BckMHw9"
+  GEMINI_API_KEY = "AIzaSyASD7jF4NXxyDE0OMNFponQskv8L05YaIw"
+  FACEBOOK_APP_ID = "1614896719141336"
+  FACEBOOK_APP_SECRET = "e602ce247ad4a1219e3b691200b22fa3"
+  NEXT_PUBLIC_API_URL = "https://www.blayz.io/api"
+  NEXT_PUBLIC_APP_URL = "https://www.blayz.io"
+  NEXT_PUBLIC_BACKEND_API_URL = "https://www.blayz.io"
+  FRONTEND_URL = "https://www.blayz.io"
+  NEXTAUTH_URL = "https://www.blayz.io/api/auth"
+  YOUR_SHARED_SECRET = "WByjS0E2PaeQ7cGLMsRd6zcD1"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[[redirects]]
+  from = "/"
+  to = "/landing"
+  status = 301
+  force = true

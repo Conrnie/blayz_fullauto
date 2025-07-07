@@ -1,0 +1,176 @@
+/* Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    background-color: white;
+    color: #111827;
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Animation Classes */
+.animate-fadeIn {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-float {
+    animation: float 6s ease-in-out infinite;
+}
+
+/* Hover Effects */
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced Button Hover */
+.btn-primary {
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px -5px rgba(254, 132, 1, 0.4);
+}
+
+/* Focus Styles */
+button:focus, a:focus {
+    outline: 2px solid #FE8401;
+    outline-offset: 2px;
+}
+
+/* Clean Card Styles */
+.card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    border-color: #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth transitions for interactive elements */
+.transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Section spacing adjustments for mobile */
+@media (max-width: 768px) {
+    .py-20 {
+        padding-top: 3rem;
+        padding-bottom: 3rem;
+    }
+    
+    .px-8 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .text-5xl {
+        font-size: 2.5rem;
+    }
+    
+    .text-6xl {
+        font-size: 3rem;
+    }
+}
+
+/* Custom utilities for the clean design */
+.text-balance {
+    text-wrap: balance;
+}
+
+.shadow-soft {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.border-light {
+    border-color: #f1f5f9;
+}
+
+/* Icon containers */
+.icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: rgba(254, 132, 1, 0.1);
+    margin: 0 auto;
+}
+
+/* Form styling improvements */
+input[type="email"] {
+    transition: all 0.3s ease;
+}
+
+input[type="email"]:focus {
+    border-color: #FE8401;
+    box-shadow: 0 0 0 3px rgba(254, 132, 1, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Success message styling */
+.success-message {
+    background-color: #f0f9ff;
+    border: 1px solid #e0f2fe;
+    color: #0c4a6e;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
+/* Mobile menu improvements */
+#mobile-menu {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+/* Responsive text scaling */
+@media (max-width: 640px) {
+    .text-4xl {
+        font-size: 2rem;
+    }
+    
+    .text-3xl {
+        font-size: 1.875rem;
+    }
+    
+    .text-xl {
+        font-size: 1.125rem;
+    }
+    
+    .text-2xl {
+        font-size: 1.25rem;
+    }
+} 

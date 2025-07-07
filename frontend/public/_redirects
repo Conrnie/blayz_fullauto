@@ -1,0 +1,4 @@
+# Redirect root to landing, but exclude auth routes
+/auth/*  /auth/:splat  200
+/api/*   /api/:splat   200
+/        /landing      301! 

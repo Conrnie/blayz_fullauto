@@ -1,0 +1,1050 @@
+import { createClient } from '@supabase/supabase-js';
+import { runIterativeAnalysis } from '../../lib/iterative-analysis';
+
+// Create a Supabase client with the service role key
+const getServiceClient = () => {
+  try {
+    // Hardcoded values for Supabase credentials (same as in analyze-campaign.js)
+    const supabaseUrl = 'https://zrsevaevonthrspehpaj.supabase.co';
+    const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpyc2V2YWV2b250aHJzcGVocGFqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0MTc3MDI5NywiZXhwIjoyMDU3MzQ2Mjk3fQ.06TCwsqt9TmtBCZRj92AEUoEGqvExjA2L77gE_sBfRI';
+
+    // Validate credentials before proceeding
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase credentials. Please check environment variables.');
+    }
+
+    console.log('[REPORT_GEN_API] Initializing Supabase client with URL:', supabaseUrl);
+    
+    // Create client with additional options for debugging
+    const client = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { 
+        autoRefreshToken: false,
+        persistSession: false 
+      }
+    });
+    
+    // Verify the client was created successfully
+    if (!client || !client.rpc) {
+      throw new Error('Supabase client initialization failed');
+    }
+    
+    console.log('[REPORT_GEN_API] Supabase client created successfully');
+    return client;
+  } catch (error) {
+    console.error('[REPORT_GEN_API] Error creating Supabase client:', error);
+    throw error;
+  }
+};
+
+// Helper function for making calls to the Requesty API with Gemini 2.5 Pro
+async function callGeminiAPI(prompt, retries = 2) {
+  const REQUESTY_BASE_URL = process.env.REQUESTY_BASE_URL || 'https://router.requesty.ai/v1';
+  const REQUESTY_MODEL = process.env.REQUESTY_MODEL || 'google/gemini-2.5-pro-exp-03-25';
+  
+  // Replace hardcoded API key with environment variable
+  const REQUESTY_API_KEY = process.env.REQUESTY_API_KEY;
+  
+  let attempt = 0;
+  
+  while (attempt <= retries) {
+    try {
+      if (attempt > 0) {
+        console.log(`[GEMINI_API] Retry attempt ${attempt} of ${retries}`);
+      }
+      
+      // Create system prompt for structured analysis
+      const systemPrompt = `You are an expert Meta ads campaign analysis AI. Your task is to analyze campaign data and generate a comprehensive, structured JSON report. 
+      
+The JSON must have these exact keys: executive_summary, campaign_analysis, ad_set_analysis, ad_analysis, segment_analysis, and actionables.
+
+Always ensure you return valid, properly escaped JSON that can be parsed using JSON.parse(). Never include markdown formatting, code blocks, or explanations outside of the JSON structure.`;
+      
+      console.log(`[GEMINI_API] Request to Requesty API with model ${REQUESTY_MODEL}`);
+      console.log(`[GEMINI_API] Prompt length: ${prompt.length} characters`);
+      
+      // Update endpoint to include /chat/completions path
+      const response = await fetch(`${REQUESTY_BASE_URL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${REQUESTY_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: REQUESTY_MODEL,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: prompt }
+          ]
+          // Remove unnecessary parameters
+        })
+      });
+    
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Requesty API error: ${response.status} - ${errorText}`);
+      }
+      
+      const result = await response.json();
+      console.log('[GEMINI_API] Requesty API response received');
+      
+      // Extract the content from the Requesty response using standard OpenAI format
+      const content = result.choices?.[0]?.message?.content || '';
+                      
+      if (!content) {
+        throw new Error('Empty or invalid response from Requesty API');
+      }
+      
+      console.log(`[GEMINI_API] Response content length: ${content.length} characters`);
+      console.log(`[GEMINI_API] Response preview: ${content.substring(0, 200)}...`);
+      
+      // Try to parse as JSON
+      try {
+        // Clean the content
+        let jsonContent = content.trim();
+        
+        // If it doesn't start with {, extract the JSON
+        if (!jsonContent.startsWith('{')) {
+          console.log('[GEMINI_API] Response doesn\'t start with {, attempting to extract JSON');
+          const startIndex = jsonContent.indexOf('{');
+          const endIndex = jsonContent.lastIndexOf('}');
+          if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+            jsonContent = jsonContent.substring(startIndex, endIndex + 1);
+            console.log(`[GEMINI_API] Extracted JSON from response (${startIndex} to ${endIndex})`);
+          }
+        }
+        
+        // Remove any control characters that might break JSON parsing
+        jsonContent = jsonContent.replace(/[\u0000-\u0019]+/g, '');
+        
+        const parsedJson = JSON.parse(jsonContent);
+        console.log('[GEMINI_API] Successfully parsed JSON response');
+        console.log('[GEMINI_API] JSON structure keys:', Object.keys(parsedJson));
+        
+        // Ensure the response has the expected fields
+        const expectedKeys = ['executive_summary', 'campaign_analysis', 'ad_set_analysis', 'ad_analysis', 'segment_analysis', 'actionables'];
+        const missingKeys = expectedKeys.filter(key => !parsedJson[key]);
+        
+        if (missingKeys.length > 0) {
+          console.warn(`[GEMINI_API] Response missing expected keys: ${missingKeys.join(', ')}`);
+        }
+        
+        // Add source and timestamp if not present
+        if (!parsedJson.source) {
+          parsedJson.source = 'ai';
+        }
+        
+        if (!parsedJson.generated_at) {
+          parsedJson.generated_at = new Date().toISOString();
+        }
+        
+        if (!parsedJson.model) {
+          parsedJson.model = REQUESTY_MODEL;
+        }
+        
+        return parsedJson;
+      } catch (parseError) {
+        console.error('[GEMINI_API] JSON parse error:', parseError);
+        console.log('[GEMINI_API] Raw content:', content.substring(0, 500) + '...');
+        throw new Error(`Failed to parse JSON response: ${parseError.message}`);
+      }
+    } catch (error) {
+      console.error(`[GEMINI_API] Error (attempt ${attempt + 1}):`, error);
+      
+      if (attempt === retries) {
+        throw error; // Re-throw if we've exhausted retries
+      }
+      
+      // Wait before retrying (exponential backoff)
+      const delay = 1000 * Math.pow(2, attempt);
+      console.log(`[GEMINI_API] Waiting ${delay}ms before retry...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      attempt++;
+    }
+  }
+}
+
+// Function to analyze a specific segment type
+async function analyzeSegment(segmentType, analysisData, overallMetrics, campaignOverviewData) {
+  console.log(`[REPORT_GEN_API] Analyzing ${segmentType} segments...`);
+  
+  // Extract just the data for this segment type
+  let segmentData = [];
+  
+  if (Array.isArray(analysisData)) {
+    analysisData.forEach(ad => {
+      if (ad[`${segmentType}_segments`] && Array.isArray(ad[`${segmentType}_segments`])) {
+        segmentData.push({
+          ad_id: ad.ad_id,
+          ad_name: ad.ad_name,
+          spend: ad.spend,
+          impressions: ad.impressions,
+          clicks: ad.clicks,
+          conversions: ad.conversions,
+          [`${segmentType}_segments`]: ad[`${segmentType}_segments`]
+        });
+      }
+    });
+  } else if (analysisData?.ad_analysis && Array.isArray(analysisData.ad_analysis)) {
+    analysisData.ad_analysis.forEach(ad => {
+      if (ad[`${segmentType}_segments`] && Array.isArray(ad[`${segmentType}_segments`])) {
+        segmentData.push({
+          ad_id: ad.ad_id,
+          ad_name: ad.ad_name,
+          spend: ad.spend,
+          impressions: ad.impressions,
+          clicks: ad.clicks,
+          conversions: ad.conversions,
+          [`${segmentType}_segments`]: ad[`${segmentType}_segments`]
+        });
+      }
+    });
+  }
+  
+  if (segmentData.length === 0) {
+    console.log(`[REPORT_GEN_API] No ${segmentType} segments found in data`);
+    return {
+      [`${segmentType}_analysis`]: {
+        summary: `No ${segmentType} segment data available for analysis.`,
+        significant_segments: [],
+        performance_factors: [],
+        actionables: []
+      }
+    };
+  }
+  
+  // Get related high-level ad data to provide context for this segment
+  const relatedHighLevelData = {
+    ad_insights: [],
+    ad_set_insights: []
+  };
+  
+  // Extract relevant ad insights for this segment analysis
+  if (campaignOverviewData.ad_insights && campaignOverviewData.ad_insights.length > 0) {
+    // Try to match ad_ids from our segment data with the ad insights
+    const adIds = new Set(segmentData.map(ad => ad.ad_id));
+    relatedHighLevelData.ad_insights = campaignOverviewData.ad_insights.filter(
+      insight => adIds.has(insight.ad_id)
+    );
+    
+    // If no matches, include top performing ads for context
+    if (relatedHighLevelData.ad_insights.length === 0) {
+      relatedHighLevelData.ad_insights = campaignOverviewData.ad_insights
+        .sort((a, b) => b.spend - a.spend)
+        .slice(0, 5); // Include top 5 ads by spend
+    }
+  }
+  
+  // Create readable segment type name for the prompt
+  const segmentTypeName = {
+    demographic: "demographic (age and gender)",
+    device: "device type and platform",
+    hourly: "time of day",
+    region: "geographic region",
+    audience: "audience interests and behavior"
+  }[segmentType] || segmentType;
+  
+  // Create the prompt for segment-specific analysis
+  const prompt = `Analyze the ${segmentTypeName} segments in this Facebook Ad campaign data and provide insights.
+
+Here are the overall campaign metrics for context:
+${JSON.stringify(overallMetrics, null, 2)}
+
+High-level ad performance data (for reference):
+${JSON.stringify(relatedHighLevelData.ad_insights, null, 2)}
+
+The ${segmentType} segment data:
+${JSON.stringify(segmentData, null, 2)}
+
+Focus on:
+1. Identifying statistically significant performance patterns (Z-scores > 1.5 or < -1.5)
+2. Segments with substantial spend percentage
+3. Both upper-funnel (CTR, CPC) and lower-funnel metrics (Conversion Rate, ROAS)
+4. Clear actionables specific to ${segmentTypeName} optimization
+5. When appropriate, mention specific ads by ID or name that are performing well or poorly in this segment
+
+YOUR RESPONSE MUST BE VALID JSON with this structure:
+{
+  "${segmentType}_analysis": {
+    "summary": "A concise 2-3 sentence summary of the key ${segmentType} segment findings",
+    "significant_segments": [
+      {
+        "segment": "Specific segment name/value",
+        "performance": "Good or poor",
+        "primary_metric": "The metric showing the most significant difference (CTR, CPC, etc.)",
+        "z_score": "The z-score value for this metric",
+        "spend_percentage": "Percentage of budget allocated to this segment",
+        "observation": "Brief explanation of what the data shows",
+        "related_ads": "Specific ads that are driving this pattern (if evident)"
+      }
+    ],
+    "performance_factors": [
+      {
+        "factor": "A specific insight about ${segmentType} performance",
+        "explanation": "Detailed explanation with supporting data",
+        "importance": "high|medium|low"
+      }
+    ],
+    "actionables": [
+      {
+        "action": "Specific action for ${segmentTypeName} optimization",
+        "expected_impact": "high|medium|low",
+        "reasoning": "Why this would help improve performance",
+        "target_ads": "Specific ads that should be adjusted (if applicable)"
+      }
+    ]
+  }
+}
+
+Your response must ONLY be the JSON object above with no additional text, markdown formatting, or comments.`;
+
+  try {
+    return await callGeminiAPI(prompt);
+  } catch (error) {
+    console.error(`[REPORT_GEN_API] Error analyzing ${segmentType} segments:`, error);
+    return {
+      [`${segmentType}_analysis`]: {
+        summary: `Error analyzing ${segmentType} segments: ${error.message}`,
+        significant_segments: [],
+        performance_factors: [],
+        actionables: []
+      }
+    };
+  }
+}
+
+// Function to synthesize final report from segment analyses
+async function synthesizeReport(analysisData, segmentAnalyses, overallMetrics, campaignOverviewData, supabase, campaignId) {
+  console.log('[REPORT_GEN_API] Starting iterative report synthesis process...');
+  
+  // Format campaign data for the prompt
+  const effectiveCampaignId = campaignId || campaignOverviewData.ad_insights?.[0]?.campaign_id || 'unknown';
+  console.log(`[REPORT_GEN_API] Using campaign ID for report: ${effectiveCampaignId}`);
+  
+  // Initialize metrics with default values
+  let totalSpend = 0;
+  let totalImpressions = 0;
+  let totalClicks = 0;
+  let totalResults = 0;
+  let ctr = 0;
+  let cpc = 0;
+  let cpa = 0;
+  let conversionRate = 0;
+  let roas = 0;
+  
+  // Fetch all metrics directly from Supabase instead of calculating
+  try {
+    console.log(`[REPORT_GEN_API] Fetching all metrics directly from demo_campaign_insights for campaign: ${effectiveCampaignId}`);
+    
+    if (effectiveCampaignId && effectiveCampaignId !== 'unknown') {
+      const { data: campaignData, error: campaignError } = await supabase
+        .from('demo_campaign_insights')
+        .select('*')
+        .eq('campaign_id', effectiveCampaignId)
+        .single();
+      
+      if (campaignError) {
+        console.error('[REPORT_GEN_API] Error fetching campaign metrics:', campaignError);
+        console.log('[REPORT_GEN_API] Will continue with default or calculated values');
+      } else if (campaignData) {
+        console.log('[REPORT_GEN_API] Successfully fetched campaign metrics from database');
+        
+        // Use all metrics directly from the database
+        totalSpend = Number(campaignData.spend || 0);
+        totalImpressions = Number(campaignData.impressions || 0);
+        totalClicks = Number(campaignData.clicks || 0);
+        totalResults = Number(campaignData.results || 0);
+        ctr = Number(campaignData.ctr || 0);
+        cpc = Number(campaignData.cpc || 0);
+        cpa = Number(campaignData.cpa || 0);
+        roas = Number(campaignData.roas || 0);
+        
+        // Conversion rate might be stored as conversion_rate in the database
+        conversionRate = Number(campaignData.conversion_rate || 0);
+        
+        console.log('[REPORT_GEN_API] Using direct database values for all metrics');
+      } else {
+        console.log('[REPORT_GEN_API] No campaign data found in database');
+      }
+    } else {
+      console.warn('[REPORT_GEN_API] No valid campaign ID to fetch metrics');
+    }
+  } catch (metricsError) {
+    console.error('[REPORT_GEN_API] Error in metrics fetch:', metricsError);
+  }
+
+  // Log final metrics
+  console.log('[REPORT_GEN_API] Final metrics:', {
+    totalSpend,
+    totalImpressions,
+    totalClicks,
+    totalResults,
+    ctr,
+    cpc,
+    cpa,
+    conversionRate,
+    roas
+  });
+  
+  // Prepare campaign metrics for analysis
+  const campaignMetrics = {
+    totalSpend,
+    totalImpressions,
+    totalClicks,
+    totalResults,
+    ctr,
+    cpc,
+    cpa,
+    conversionRate,
+    roas
+  };
+  
+  // Transform analysis data if needed to ensure compatibility with the expected format
+  let processedData = analysisData;
+  
+  // If analysisData is not an array, attempt to extract ad_analysis array
+  if (!Array.isArray(analysisData) && analysisData?.ad_analysis) {
+    processedData = analysisData.ad_analysis;
+  }
+  
+  // If we still don't have an array, create one from available data
+  if (!Array.isArray(processedData)) {
+    console.log('[REPORT_GEN_API] Reconstructing analysis data from campaignOverviewData');
+    processedData = campaignOverviewData.ad_insights.map(ad => {
+      return {
+        ad_id: ad.ad_id,
+        ad_set_id: ad.ad_set_id,
+        overall_metrics: {
+          impressions: ad.impressions,
+          spend: ad.spend,
+          results: ad.results || ad.conversions || 0,
+          ctr: ad.ctr || 0,
+          cpc: ad.cpc || 0,
+          cpa: ad.cpa || 0,
+          roas: ad.roas || 0
+        }
+      };
+    });
+  }
+  
+  // Calculate ad set level metrics and prepare them for analysis
+  const adSetMetrics = {};
+  
+  // Prepare ad set data for the analysis
+  if (campaignOverviewData.ad_set_insights && campaignOverviewData.ad_set_insights.length > 0) {
+    campaignOverviewData.ad_set_insights.forEach(adSet => {
+      const adSetId = adSet.ad_set_id;
+      if (!adSetMetrics[adSetId]) {
+        adSetMetrics[adSetId] = {
+          ad_set_id: adSetId,
+          ad_set_name: adSet.ad_set_name || `Ad Set ${adSetId}`,
+          spend: Number(adSet.spend || 0),
+          impressions: Number(adSet.impressions || 0),
+          clicks: Number(adSet.clicks || 0),
+          results: Number(adSet.results || adSet.conversions || 0),
+          ctr: Number(adSet.ctr || 0),
+          cpc: Number(adSet.cpc || 0),
+          cpa: Number(adSet.cpa || 0),
+          roas: Number(adSet.roas || 0),
+          conversion_rate: Number(adSet.conversion_rate || 0),
+          spend_percentage: 0 // Will calculate below
+        };
+      }
+    });
+  } else {
+    // If no ad set data available, aggregate by ad's ad_set_id
+    campaignOverviewData.ad_insights.forEach(ad => {
+      const adSetId = ad.ad_set_id;
+      if (!adSetId) return;
+      
+      if (!adSetMetrics[adSetId]) {
+        adSetMetrics[adSetId] = {
+          ad_set_id: adSetId,
+          ad_set_name: `Ad Set ${adSetId}`,
+          spend: 0,
+          impressions: 0,
+          clicks: 0,
+          results: 0,
+          ctr: 0,
+          cpc: 0,
+          cpa: 0,
+          roas: 0,
+          conversion_rate: 0,
+          spend_percentage: 0
+        };
+      }
+      
+      // Aggregate metrics
+      adSetMetrics[adSetId].spend += Number(ad.spend || 0);
+      adSetMetrics[adSetId].impressions += Number(ad.impressions || 0);
+      adSetMetrics[adSetId].clicks += Number(ad.clicks || 0);
+      adSetMetrics[adSetId].results += Number(ad.results || ad.conversions || 0);
+    });
+    
+    // Calculate derived metrics for each ad set
+    Object.values(adSetMetrics).forEach(adSet => {
+      if (adSet.impressions > 0) {
+        adSet.ctr = (adSet.clicks / adSet.impressions) * 100;
+      }
+      if (adSet.clicks > 0) {
+        adSet.cpc = adSet.spend / adSet.clicks;
+      }
+      if (adSet.results > 0) {
+        adSet.cpa = adSet.spend / adSet.results;
+      }
+      if (adSet.impressions > 0) {
+        adSet.conversion_rate = (adSet.results / adSet.impressions) * 100;
+      }
+      // Estimate ROAS (assuming $50 value per result)
+      const estimatedRevenue = adSet.results * 50;
+      adSet.roas = adSet.spend > 0 ? estimatedRevenue / adSet.spend : 0;
+    });
+  }
+  
+  // Calculate spend percentages
+  if (totalSpend > 0) {
+    Object.values(adSetMetrics).forEach(adSet => {
+      adSet.spend_percentage = (adSet.spend / totalSpend) * 100;
+    });
+  }
+  
+  // Create sorted array of ad sets by spend
+  const adSetsArray = Object.values(adSetMetrics).sort((a, b) => b.spend - a.spend);
+  
+  // Prepare ad performance data
+  let adMetrics = [];
+  
+  if (processedData && processedData.length > 0) {
+    // Extract and normalize ad metrics
+    adMetrics = processedData.map(ad => {
+      // Get metrics from various possible locations in the data structure
+      const metrics = ad.overall_metrics || ad.metrics || {};
+      const zScores = ad.overall_z_scores_vs_campaign_avg || ad.z_scores || {};
+      
+      return {
+        ad_id: ad.ad_id,
+        ad_name: ad.ad_name || `Ad ${ad.ad_id}`,
+        ad_set_id: ad.ad_set_id,
+        spend: Number(metrics.spend || 0),
+        impressions: Number(metrics.impressions || 0),
+        clicks: Number(metrics.clicks || 0),
+        results: Number(metrics.results || metrics.conversions || 0),
+        ctr: Number(metrics.ctr || 0),
+        cpc: Number(metrics.cpc || 0),
+        cpa: Number(metrics.cpa || 0),
+        roas: Number(metrics.roas || 0),
+        conversion_rate: Number(metrics.conversion_rate || 0),
+        z_scores: {
+          spend: Number(zScores.spend || 0),
+          impressions: Number(zScores.impressions || 0),
+          clicks: Number(zScores.clicks || 0),
+          results: Number(zScores.results || zScores.conversions || 0),
+          ctr: Number(zScores.ctr || 0),
+          cpc: Number(zScores.cpc || 0),
+          cpa: Number(zScores.cpa || 0),
+          roas: Number(zScores.roas || 0),
+          conversion_rate: Number(zScores.conversion_rate || 0)
+        },
+        spend_percentage: 0 // Will calculate below
+      };
+    });
+    
+    // Calculate spend percentages
+    if (totalSpend > 0) {
+      adMetrics.forEach(ad => {
+        ad.spend_percentage = (ad.spend / totalSpend) * 100;
+      });
+    }
+    
+    // Sort by spend
+    adMetrics.sort((a, b) => b.spend - a.spend);
+  }
+  
+  // Prepare segment data for analysis
+  const segmentData = {
+    demographic: [],
+    device: [],
+    hourly: [],
+    region: [],
+    audience: []
+  };
+  
+  // Extract segment data from the analysis data
+  if (processedData && processedData.length > 0) {
+    processedData.forEach(ad => {
+      // Process demographic segments
+      if (ad.demographic_segments && Array.isArray(ad.demographic_segments)) {
+        ad.demographic_segments.forEach(segment => {
+          segmentData.demographic.push({
+            ad_id: ad.ad_id,
+            segment_value: `${segment.segment_detail.age || 'Unknown'}-${segment.segment_detail.gender || 'Unknown'}`,
+            metrics: segment.metrics || {},
+            z_scores: segment.z_scores_vs_ad_avg || {},
+            spend_percentage: segment.ad_spend_percentage || 0
+          });
+        });
+      }
+      
+      // Process device segments
+      if (ad.device_segments && Array.isArray(ad.device_segments)) {
+        ad.device_segments.forEach(segment => {
+          segmentData.device.push({
+            ad_id: ad.ad_id,
+            segment_value: `${segment.segment_detail.device_type || 'Unknown'}-${segment.segment_detail.platform || 'Unknown'}-${segment.segment_detail.placement || 'Unknown'}`,
+            metrics: segment.metrics || {},
+            z_scores: segment.z_scores_vs_ad_avg || {},
+            spend_percentage: segment.ad_spend_percentage || 0
+          });
+        });
+      }
+      
+      // Similarly for other segment types
+      // Hourly segments
+      if (ad.hourly_segments && Array.isArray(ad.hourly_segments)) {
+        ad.hourly_segments.forEach(segment => {
+          segmentData.hourly.push({
+            ad_id: ad.ad_id,
+            segment_value: `Hour-${segment.segment_detail.hour || 'Unknown'}`,
+            metrics: segment.metrics || {},
+            z_scores: segment.z_scores_vs_ad_avg || {},
+            spend_percentage: segment.ad_spend_percentage || 0
+          });
+        });
+      }
+      
+      // Region segments
+      if (ad.region_segments && Array.isArray(ad.region_segments)) {
+        ad.region_segments.forEach(segment => {
+          segmentData.region.push({
+            ad_id: ad.ad_id,
+            segment_value: segment.segment_detail.region || 'Unknown',
+            metrics: segment.metrics || {},
+            z_scores: segment.z_scores_vs_ad_avg || {},
+            spend_percentage: segment.ad_spend_percentage || 0
+          });
+        });
+      }
+      
+      // Audience segments
+      if (ad.audience_segments && Array.isArray(ad.audience_segments)) {
+        ad.audience_segments.forEach(segment => {
+          segmentData.audience.push({
+            ad_id: ad.ad_id,
+            segment_value: segment.segment_detail.audience_type || 'Unknown',
+            metrics: segment.metrics || {},
+            z_scores: segment.z_scores_vs_ad_avg || {},
+            spend_percentage: segment.ad_spend_percentage || 0
+          });
+        });
+      }
+    });
+  }
+  
+  // Add segment analyses from earlier step
+  Object.assign(segmentData, segmentAnalyses);
+  
+  try {
+    // Run the iterative analysis process
+    console.log('[REPORT_GEN_API] Running TRUE iterative analysis with multiple calls to Gemini 2.5 Pro');
+    
+    const finalReport = await runIterativeAnalysis(
+      effectiveCampaignId,
+      campaignMetrics,
+      adSetsArray,
+      adMetrics,
+      segmentData
+    );
+    
+    console.log('[REPORT_GEN_API] Successfully completed iterative analysis process');
+    return finalReport;
+  } catch (error) {
+    console.error('[REPORT_GEN_API] Error in iterative analysis process:', error);
+    
+    // Return a fallback report if the iterative analysis fails
+    return {
+      executive_summary: `Error generating report using iterative analysis: ${error.message}`,
+      campaign_analysis: "Error analyzing campaign performance",
+      ad_set_analysis: "Error analyzing ad set performance",
+      ad_analysis: "Error analyzing ad performance",
+      segment_analysis: {
+        demographics: "Error analyzing demographics",
+        devices: "Error analyzing devices",
+        regions: "Error analyzing regions",
+        times: "Error analyzing times",
+        audiences: "Error analyzing audiences"
+      },
+      actionables: [],
+      model: process.env.REQUESTY_MODEL || "google/gemini-2.5-pro-exp-03-25",
+      source: "ai",
+      generated_at: new Date().toISOString()
+    };
+  }
+}
+
+// Helper function to extract basic metrics from analysis data
+function extractBasicMetrics(data) {
+  try {
+    const metrics = {
+      ads_count: 0,
+      total_spend: 0,
+      total_impressions: 0,
+      total_clicks: 0,
+      total_results: 0,  // Changed from total_conversions to total_results
+      average_ctr: 0,
+      average_cpc: 0,
+      segments_analyzed: []
+    };
+
+    // If it's an array of ads
+    if (Array.isArray(data)) {
+      metrics.ads_count = data.length;
+      
+      data.forEach(ad => {
+        metrics.total_spend += Number(ad.spend || 0);
+        metrics.total_impressions += Number(ad.impressions || 0);
+        metrics.total_clicks += Number(ad.clicks || 0);
+        
+        // Check for both field names and use whichever is available
+        const conversionValue = Number(ad.results || ad.conversions || 0);
+        metrics.total_results += conversionValue;
+        
+        // Check for segment types
+        ['demographic_segments', 'device_segments', 'hourly_segments', 'region_segments', 'audience_segments'].forEach(segmentType => {
+          if (ad[segmentType] && !metrics.segments_analyzed.includes(segmentType)) {
+            metrics.segments_analyzed.push(segmentType);
+          }
+        });
+      });
+    }
+    // If it has an ad_analysis array
+    else if (data?.ad_analysis && Array.isArray(data.ad_analysis)) {
+      metrics.ads_count = data.ad_analysis.length;
+      
+      data.ad_analysis.forEach(ad => {
+        metrics.total_spend += Number(ad.spend || 0);
+        metrics.total_impressions += Number(ad.impressions || 0);
+        metrics.total_clicks += Number(ad.clicks || 0);
+        
+        // Check for both field names and use whichever is available
+        const conversionValue = Number(ad.results || ad.conversions || 0);
+        metrics.total_results += conversionValue;
+        
+        // Check for segment types
+        ['demographic_segments', 'device_segments', 'hourly_segments', 'region_segments', 'audience_segments'].forEach(segmentType => {
+          if (ad[segmentType] && !metrics.segments_analyzed.includes(segmentType)) {
+            metrics.segments_analyzed.push(segmentType);
+          }
+        });
+      });
+    }
+    
+    // Calculate averages
+    if (metrics.total_impressions > 0) {
+      metrics.average_ctr = (metrics.total_clicks / metrics.total_impressions) * 100;
+    }
+    
+    if (metrics.total_clicks > 0) {
+      metrics.average_cpc = metrics.total_spend / metrics.total_clicks;
+    }
+    
+    // Calculate CPA
+    const average_cpa = metrics.total_results > 0 
+      ? metrics.total_spend / metrics.total_results 
+      : 0;
+    
+    // Format for readability
+    return {
+      ads_count: metrics.ads_count,
+      total_spend: `$${metrics.total_spend.toFixed(2)}`,
+      total_impressions: metrics.total_impressions.toLocaleString(),
+      total_clicks: metrics.total_clicks.toLocaleString(),
+      total_results: metrics.total_results.toLocaleString(), // Changed from total_conversions to total_results
+      average_ctr: `${metrics.average_ctr.toFixed(2)}%`,
+      average_cpc: `$${metrics.average_cpc.toFixed(2)}`,
+      average_cpa: `$${average_cpa.toFixed(2)}`,
+      segments_analyzed: metrics.segments_analyzed
+    };
+  } catch (error) {
+    console.error('[REPORT_GEN_API] Error extracting basic metrics:', error);
+    return {
+      error: 'Failed to extract metrics',
+      message: 'The data structure could not be processed for a summary'
+    };
+  }
+}
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+  }
+  
+  try {
+    // Extract the query parameters
+    const { campaignId, userId, analysisData: requestAnalysisData } = req.body;
+    
+    // Use specified campaign ID or default to test_campaign_499 for testing
+    const effectiveCampaignId = campaignId === 'mock-campaign-id' ? 'test_campaign_499' : campaignId;
+    
+    if (!effectiveCampaignId) {
+      return res.status(400).json({ error: 'Missing campaign ID in request' });
+    }
+    
+    console.log(`[REPORT_GEN_API] Generating report for campaign: ${effectiveCampaignId} (original: ${campaignId})`);
+    console.log(`[REPORT_GEN_API] Using Gemini API with key: ${process.env.GEMINI_API_KEY ? 'From env' : 'From hardcoded value'}`);
+    
+    // Step 1: Get Supabase client
+    const supabase = getServiceClient();
+    
+    // Step 2: Get analysis data - either from request or by calling the function
+    let analysisData;
+    let campaignOverviewData = { ad_insights: [], ad_set_insights: [] };
+    
+    if (requestAnalysisData) {
+      console.log('[REPORT_GEN_API] Using analysis data from request');
+      analysisData = requestAnalysisData;
+    } else {
+    console.log('[REPORT_GEN_API] Calling analyze_campaign_performance_full_context function');
+      
+      try {
+      // Fetch the detailed segment analysis data
+      const { data: dbAnalysisData, error: analysisError } = await supabase.rpc(
+      'analyze_campaign_performance_full_context'
+    );
+    
+    if (analysisError) {
+      console.error('[REPORT_GEN_API] Analysis error:', analysisError);
+      throw new Error(`Analysis error: ${analysisError.message}`);
+    }
+    
+      if (!dbAnalysisData || dbAnalysisData.length === 0) {
+          console.warn('[REPORT_GEN_API] No analysis data returned from function');
+        }
+        
+        // Ensure the data is in the right format (array)
+        analysisData = Array.isArray(dbAnalysisData) ? dbAnalysisData : [];
+        console.log(`[REPORT_GEN_API] Retrieved ${analysisData.length} ads from analysis function`);
+        
+      } catch (funcError) {
+        console.error('[REPORT_GEN_API] Error calling analysis function:', funcError);
+        // Don't throw here, we'll continue with other data sources
+      }
+      
+      // Also fetch higher-level data from ad insights and ad set insights tables
+      console.log(`[REPORT_GEN_API] Fetching additional campaign overview data for: ${effectiveCampaignId}`);
+      
+      try {
+        // Fetch ad insights (high-level ad performance)
+        const { data: adInsightsData, error: adInsightsError } = await supabase
+          .from('demo_ad_insights')
+          .select('*')
+          .eq('campaign_id', effectiveCampaignId)
+          .order('spend', { ascending: false });
+          
+        if (adInsightsError) {
+          console.error('[REPORT_GEN_API] Error fetching ad insights:', adInsightsError);
+        } else if (adInsightsData) {
+          console.log(`[REPORT_GEN_API] Fetched ${adInsightsData.length} ad insights records`);
+          campaignOverviewData.ad_insights = adInsightsData;
+          
+          // If we didn't get analysis data from function, construct it from ad insights
+          if (!analysisData || analysisData.length === 0) {
+            analysisData = adInsightsData.map(insight => ({
+              ad_id: insight.ad_id,
+              overall_metrics: {
+                impressions: insight.impressions,
+                spend: insight.spend,
+                results: insight.results || insight.conversions || 0,
+                ctr: insight.ctr || 0,
+                cpc: insight.cpc || 0,
+                cpa: insight.cpa || 0,
+                roas: insight.roas || 0
+              }
+            }));
+            console.log(`[REPORT_GEN_API] Constructed analysis data from ad insights: ${analysisData.length} entries`);
+          }
+        }
+        
+        // Fetch ad set insights (ad set level performance)
+        const { data: adSetInsightsData, error: adSetInsightsError } = await supabase
+          .from('demo_ad_set_insights')
+          .select('*')
+          .eq('campaign_id', effectiveCampaignId)
+          .order('spend', { ascending: false });
+          
+        if (adSetInsightsError) {
+          console.error('[REPORT_GEN_API] Error fetching ad set insights:', adSetInsightsError);
+        } else if (adSetInsightsData) {
+          console.log(`[REPORT_GEN_API] Fetched ${adSetInsightsData.length} ad set insights records`);
+          campaignOverviewData.ad_set_insights = adSetInsightsData;
+        }
+        
+        // If we didn't get any insights data for the effectiveCampaignId, use sample data as fallback
+        if (campaignOverviewData.ad_insights.length === 0 && 
+            campaignOverviewData.ad_set_insights.length === 0) {
+          
+          console.warn(`[REPORT_GEN_API] No insights found for campaign ${effectiveCampaignId}. Falling back to sample data.`);
+          
+          // Fetch sample ad insights
+          const { data: sampleAdInsights, error: sampleAdError } = await supabase
+            .from('demo_ad_insights')
+            .select('*')
+            .limit(10); // Fetch a small sample
+            
+          if (sampleAdError) {
+            console.error('[REPORT_GEN_API] Error fetching sample ad insights:', sampleAdError);
+          } else if (sampleAdInsights && sampleAdInsights.length > 0) {
+            console.log(`[REPORT_GEN_API] Using ${sampleAdInsights.length} sample ad insights.`);
+              campaignOverviewData.ad_insights = sampleAdInsights;
+            
+            // If analysisData is still empty, construct it from sample ad insights
+            if (!analysisData || analysisData.length === 0) {
+              analysisData = sampleAdInsights.map(insight => ({
+                ad_id: insight.ad_id,
+                overall_metrics: {
+                  impressions: insight.impressions,
+                  spend: insight.spend,
+                  results: insight.results || insight.conversions || 0,
+                  ctr: insight.ctr || 0,
+                  cpc: insight.cpc || 0,
+                  cpa: insight.cpa || 0,
+                  roas: insight.roas || 0
+                }
+              }));
+              console.log(`[REPORT_GEN_API] Constructed analysis data from sample ad insights: ${analysisData.length} entries`);
+            }
+          }
+
+          // Fetch sample ad set insights
+          const { data: sampleAdSetInsights, error: sampleAdSetError } = await supabase
+              .from('demo_ad_set_insights')
+              .select('*')
+            .limit(5); // Fetch a small sample
+              
+          if (sampleAdSetError) {
+            console.error('[REPORT_GEN_API] Error fetching sample ad set insights:', sampleAdSetError);
+          } else if (sampleAdSetInsights && sampleAdSetInsights.length > 0) {
+            console.log(`[REPORT_GEN_API] Using ${sampleAdSetInsights.length} sample ad set insights.`);
+              campaignOverviewData.ad_set_insights = sampleAdSetInsights;
+            }
+          
+          // Log if still no data after fallback
+          if (campaignOverviewData.ad_insights.length === 0 && campaignOverviewData.ad_set_insights.length === 0) {
+             console.error('[REPORT_GEN_API] Critical: Could not load any ad/ad set data, even from samples. Analysis will be incomplete.');
+          }
+        }
+      } catch (overviewError) {
+        console.error('[REPORT_GEN_API] Error fetching overview data:', overviewError);
+        // Non-critical error, continue with the analysis data we have
+      }
+    }
+    
+    // Step 3: Extract overall metrics for context
+    const overallMetrics = extractBasicMetrics(analysisData);
+    console.log('[REPORT_GEN_API] Extracted overall metrics:', overallMetrics);
+    
+    // Step 4: Analyze each segment type individually
+    const segmentTypes = ['demographic', 'device', 'hourly', 'region', 'audience'];
+    const segmentAnalyses = {};
+    
+    for (const segmentType of segmentTypes) {
+      console.log(`[REPORT_GEN_API] Starting analysis of ${segmentType} segments...`);
+      const segmentResult = await analyzeSegment(segmentType, analysisData, overallMetrics, campaignOverviewData);
+      
+      // Add the segment analysis to our collection
+      Object.assign(segmentAnalyses, segmentResult);
+      
+      console.log(`[REPORT_GEN_API] Completed analysis of ${segmentType} segments`);
+    }
+    
+    // Step 5: Synthesize final report from all segment analyses
+    const aiInsights = await synthesizeReport(
+      analysisData, 
+      segmentAnalyses, 
+      overallMetrics, 
+      campaignOverviewData, 
+      supabase,  // Pass the supabase client
+      effectiveCampaignId  // Pass the campaign ID
+    );
+    
+    // No need to modify aiInsights structure since our new approach returns the complete structure
+    console.log('[REPORT_GEN_API] AI insights being saved to database:', 
+      JSON.stringify({
+        summary_excerpt: aiInsights.executive_summary?.substring(0, 100) + '...',
+        key_insights_count: aiInsights.key_insights?.length || 0,
+        actionables_count: aiInsights.actionables?.length || 0,
+        model: aiInsights.model
+      })
+    );
+    
+    // Step 7: Save to database
+    try {
+      console.log('[REPORT_GEN_API] Saving report to database...');
+      
+      // Get the user ID from the request
+      const userId = req.body.userId;
+      
+      // Create a complete report_data object that includes all necessary data
+      const completeReportData = {
+        // Include the segment analysis data
+        segment_analysis: Array.isArray(analysisData) 
+          ? analysisData 
+          : Array.isArray(analysisData?.ad_analysis) 
+              ? analysisData.ad_analysis
+              : [],
+        // Include the ad insights and ad set insights
+        ad_insights: campaignOverviewData.ad_insights || [],
+        ad_set_insights: campaignOverviewData.ad_set_insights || []
+      };
+      
+      // Create the report object
+      const report = {
+        user_id: userId,
+        campaign_id: effectiveCampaignId,
+        report_date: new Date().toISOString().split('T')[0],
+        report_data: JSON.stringify(completeReportData), // Serialize the complete report_data
+        ai_insights: JSON.stringify(aiInsights) // Serialize to ensure proper JSON storage
+      };
+      
+      // Log the structure to verify
+      console.log('[REPORT_GEN_API] AI insights structure type:', typeof report.ai_insights);
+      console.log('[REPORT_GEN_API] AI insights keys:', 
+        typeof aiInsights === 'object' ? Object.keys(aiInsights) : 'non-object');
+      console.log('[REPORT_GEN_API] Report data includes:', 
+        Object.keys(completeReportData).join(', '), 
+        `(${completeReportData.ad_insights.length} ad insights, ${completeReportData.ad_set_insights.length} ad set insights)`);
+
+      // Get service client to bypass RLS for insert, but include RLS fields
+      const serviceClient = getServiceClient();
+      
+      // Log the user_id for debugging
+      console.log('[REPORT_GEN_API] Creating report for user_id:', userId);
+      
+      // Store the report using service role (bypass RLS)
+      const { data: reportData, error: saveError } = await serviceClient
+        .from('campaign_reports')
+        .insert(report)
+        .select('id')
+        .single();
+      
+      if (saveError) {
+        console.error('[REPORT_GEN_API] Save error:', saveError);
+        throw new Error(`Save error: ${saveError.message}`);
+      }
+      
+      console.log(`[REPORT_GEN_API] Report generated successfully with ID: ${reportData.id}`);
+      
+      return res.status(200).json({ 
+        success: true,
+        report_id: reportData.id
+      });
+    } catch (error) {
+      console.error('[REPORT_GEN_API] Save error:', error);
+      throw error;
+    }
+  } catch (error) {
+    console.error('[REPORT_GEN_API] Report generation error:', error);
+    return res.status(500).json({ 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+} 

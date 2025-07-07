@@ -1,0 +1,113 @@
+/* Base Styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+}
+
+/* Custom Animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes pulse-slow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(254, 132, 1, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(254, 132, 1, 0.8); }
+}
+
+/* Animation Classes */
+.animate-float {
+    animation: float 10s ease-in-out infinite;
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 3s infinite;
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-glow {
+    animation: glow 3s infinite;
+}
+
+/* Custom Utility Classes */
+.glow-effect {
+    box-shadow: 0 0 10px rgba(254, 132, 1, 0.5);
+}
+
+.text-gradient {
+    background: linear-gradient(90deg, #FE8401, #FFAB58);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.gradient-border {
+    position: relative;
+}
+
+.gradient-border::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: linear-gradient(45deg, #FE8401, #0F172A);
+    -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+/* Hover Effects */
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px -5px rgba(254, 132, 1, 0.1);
+}
+
+/* Focus Styles */
+button:focus, a:focus {
+    outline: 2px solid #FE8401;
+    outline-offset: 2px;
+}
+
+/* Responsive Spacing Adjustments */
+@media (max-width: 768px) {
+    .py-20 {
+        padding-top: 4rem;
+        padding-bottom: 4rem;
+    }
+    
+    .px-8 {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+} 
