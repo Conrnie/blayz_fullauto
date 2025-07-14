@@ -102,8 +102,19 @@ export default async function handler(req, res) {
 
     console.log('[Proxy] Edge function response status:', response.status);
     
-    const result = await response.json();
-    console.log('[Proxy] Edge function response:', result);
+    let result;
+    try {
+      result = await response.json();
+      console.log('[Proxy] Edge function response:', result);
+    } catch (jsonError) {
+      console.error('[Proxy] Failed to parse JSON response:', jsonError.message);
+      if (response.ok) {
+        // Assume success if status is OK, even if body is empty
+        result = { message: 'Sync completed successfully (empty response)' };
+      } else {
+        throw jsonError;
+      }
+    }
 
     if (!response.ok) {
       console.error('[Proxy] Edge function error:', result);
