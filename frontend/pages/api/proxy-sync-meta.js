@@ -36,11 +36,39 @@ export default async function handler(req, res) {
       throw new Error('Neither YOUR_SHARED_SECRET nor SUPABASE_SERVICE_KEY configured');
     }
 
+    // Validate user authentication
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('[Proxy] Missing or invalid authorization header');
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    // Create Supabase client to validate user
+    const supabase = createClient(supabaseUrl, serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    
+    // Validate user token
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    
+    if (userError || !user) {
+      console.log('[Proxy] Invalid token or user not found:', userError?.message);
+      return res.status(401).json({ error: 'Authentication failed' });
+    }
+    
+    console.log('[Proxy] User authenticated:', user.id);
+
     const edgeUrl = `${supabaseUrl}/functions/v1/sync-meta-data`;
     const authToken = sharedSecret || serviceRoleKey;
 
     console.log('[Proxy] Calling edge function:', edgeUrl);
     console.log('[Proxy] Request body:', req.body);
+
+    // Pass user info to the Edge Function
+    const requestBody = {
+      ...req.body,
+      user_id: user.id // Ensure user_id is passed
+    };
 
     const response = await fetch(edgeUrl, {
       method: 'POST',
@@ -48,27 +76,26 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
         'X-Shared-Secret': authToken,
       },
-      body: JSON.stringify(req.body),
+      body: JSON.stringify(requestBody),
     });
 
     console.log('[Proxy] Edge function response status:', response.status);
+    
+    const result = await response.json();
+    console.log('[Proxy] Edge function response:', result);
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[Proxy] Edge function error:', errorText);
-      try {
-        const errorData = JSON.parse(errorText);
-        return res.status(response.status).json(errorData);
-      } catch (parseError) {
-        return res.status(response.status).json({ error: 'Edge function error', details: errorText });
-      }
+      console.error('[Proxy] Edge function error:', result);
+      return res.status(response.status).json(result);
     }
 
-    const data = await response.json();
-    console.log('[Proxy] Edge function success:', data);
-    return res.status(200).json(data);
+    return res.status(200).json(result);
+
   } catch (error) {
     console.error('[Proxy] Error:', error);
-    return res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
 } 
