@@ -161,8 +161,25 @@ export default async function handler(req, res) {
           })
           .eq('profile_id', profileId);
 
-        // TODO: Trigger n8n webhook asynchronously here if needed
-        
+        // Trigger n8n webhook asynchronously
+        const n8nWebhookUrl = process.env.WEBHOOK_N8N_URL;
+        if (n8nWebhookUrl) {
+          fetch(n8nWebhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              profile_id: profileId,
+              company_name,
+              website_url: formattedUrl,
+              user_id: userId
+            })
+          }).catch(error => {
+            console.error('Failed to trigger n8n webhook:', error);
+          });
+        } else {
+          console.warn('WEBHOOK_N8N_URL not configured - skipping webhook trigger');
+        }
+
         return res.status(200).json({
           success: true,
           message: "Company profile creation started. You'll be notified when it's ready!",
