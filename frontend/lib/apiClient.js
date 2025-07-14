@@ -39,13 +39,17 @@ export async function fetchWithAuth(url, options = {}) {
     if (!response.ok) {
       let errorData;
       try {
-        errorData = await response.json();
+        const responseText = await response.text();
+        try {
+          errorData = JSON.parse(responseText);
+        } catch (e) {
+          errorData = responseText;
+        }
       } catch (e) {
-        // If the error response is not JSON, use text
-        errorData = await response.text();
+        errorData = response.statusText || 'API request failed';
       }
       console.error('API Error Response:', errorData);
-      const error = new Error(errorData.message || response.statusText || 'API request failed');
+      const error = new Error(errorData.message || errorData || response.statusText || 'API request failed');
       error.status = response.status;
       error.data = errorData;
       throw error;

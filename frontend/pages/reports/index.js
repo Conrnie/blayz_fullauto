@@ -211,7 +211,7 @@ export default function ReportsList() {
       setCheckingCampaignData(true);
       setGenerationError(null); // Clear previous errors
       try {
-        const backendApiUrl = process.env.NEXT_PUBLIC_BACKEND_API_URL;
+        const backendApiUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
         if (!backendApiUrl) {
           throw new Error("Backend API URL is not configured.");
         }
