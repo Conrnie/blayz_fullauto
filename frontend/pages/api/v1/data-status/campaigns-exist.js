@@ -74,6 +74,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({
         success: true,
+        campaigns_exist: hasCampaigns,
         has_campaigns: hasCampaigns,
         campaign_count: campaigns?.length || 0,
         message: hasCampaigns ? 'Campaigns found' : 'No campaigns found'
