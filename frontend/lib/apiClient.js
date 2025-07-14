@@ -87,8 +87,14 @@ export async function associateProfileToCampaign(campaignId, profileId) {
 export async function getCompanyProfiles() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
   
-  return fetchWithAuth(`${backendUrl}/api/company-profiles/`, {
-    method: 'GET'
+  return fetchWithAuth(`${backendUrl}/api/company-profiles/`);
+}
+
+export async function deleteCompanyProfile(profileId) {
+  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+  
+  return fetchWithAuth(`${backendUrl}/api/company-profiles/${profileId}`, {
+    method: 'DELETE'
   });
 }
 

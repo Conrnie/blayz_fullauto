@@ -32,7 +32,7 @@ const CampaignsList = ({ adAccountId, onCampaignSelect, selectedCampaignId, refr
       console.log('[CAMPAIGNS_LIST] Calling sync-meta-data edge function...');
       
       // Edge function URL for sync-meta-data
-      const syncUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/sync-meta-data`;
+      const syncUrl = '/api/proxy-sync-meta';  // Updated to use secure proxy
       
       const response = await fetch(syncUrl, {
         method: 'POST',

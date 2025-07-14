@@ -281,6 +281,12 @@ async function fetchMetaAdSetInsights(adSetId: string, accessToken: string, conf
         url += '&action_breakdowns=action_type';
     }
 
+    // Log the API URL for country breakdown to debug
+    if (config.type === 'country') {
+        console.log(`Country breakdown time period: ${JSON.stringify(config.timePeriod)}`);
+        console.log(`Country breakdown API URL: ${url.replace(accessToken, '[REDACTED]')}`);
+    }
+
     // Log the API URL for hourly breakdown to debug
     if (config.type === 'hourly_stats_aggregated_by_audience_time_zone') {
         console.log(`Hourly breakdown time period: ${JSON.stringify(config.timePeriod)}`);
@@ -294,6 +300,15 @@ async function fetchMetaAdSetInsights(adSetId: string, accessToken: string, conf
         throw new Error(`Failed to fetch Meta ad set insights for ${config.type}: ${errorData.error?.message || response.statusText}`);
     }
     const data = await response.json();
+    
+    // Log the response for country breakdown to debug
+    if (config.type === 'country') {
+        console.log(`Country breakdown API response data length: ${data.data?.length || 0}`);
+        if (data.data && data.data.length > 0) {
+            console.log(`Sample country data:`, JSON.stringify(data.data[0], null, 2));
+            console.log(`All country data:`, JSON.stringify(data.data, null, 2));
+        }
+    }
     
     // Log the response for hourly breakdown to debug
     if (config.type === 'hourly_stats_aggregated_by_audience_time_zone') {

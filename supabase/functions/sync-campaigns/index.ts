@@ -42,14 +42,13 @@ const BASE_INSIGHT_FIELDS = [
   'date_start'
 ].join(',');
 
-// Updated to 60 days lookback for better data coverage
+// Time Period Definitions (90 days back from today, adjusted to -89 for exactly 90 days inclusive)
 const today = new Date();
-const endDate60Days = new Date(today);
-const startDate60Days = new Date(today);
-startDate60Days.setDate(startDate60Days.getDate() - 60); // Extended to 60 days for better data coverage
-const DAILY_INSIGHTS_TIME_PERIOD = {
-  since: startDate60Days.toISOString().split('T')[0],
-  until: endDate60Days.toISOString().split('T')[0]
+const startDate90Days = new Date(today);
+startDate90Days.setDate(startDate90Days.getDate() - 89);  // Changed from -90 to -89
+const NINETY_DAY_TIME_PERIOD = {
+  since: startDate90Days.toISOString().split('T')[0],
+  until: today.toISOString().split('T')[0]
 };
 
 // --- Define Interface for Insight Results ---
@@ -461,7 +460,7 @@ async function handleRequest(req: Request) {
             continue;
         }
         // Use BASE_INSIGHT_FIELDS - asks for 'actions' needed for calculations
-        const insightsUrl = `https://graph.facebook.com/v19.0/${campDetail.metaCampaignId}/insights?fields=${BASE_INSIGHT_FIELDS}&time_range={'since':'${DAILY_INSIGHTS_TIME_PERIOD.since}','until':'${DAILY_INSIGHTS_TIME_PERIOD.until}'}&level=campaign&time_increment=1&limit=1000&access_token=${accessToken}`;
+        const insightsUrl = `https://graph.facebook.com/v19.0/${campDetail.metaCampaignId}/insights?fields=${BASE_INSIGHT_FIELDS}&time_range={'since':'${NINETY_DAY_TIME_PERIOD.since}','until':'${NINETY_DAY_TIME_PERIOD.until}'}&level=campaign&time_increment=1&limit=1000&access_token=${accessToken}`;
         const insightsResponse = await fetch(insightsUrl);
 
         if (insightsResponse.ok) {

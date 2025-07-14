@@ -127,7 +127,7 @@ async def trigger_n8n_webhook(profile_id: str, company_name: str, website_url: s
     """
     Trigger the n8n webhook for profile generation
     """
-    n8n_webhook_url = "https://primary-production-7c692.up.railway.app/webhook-test/e978a23b-ada4-4ed5-8a59-027824d2adaf"
+    n8n_webhook_url = "https://primary-production-7c692.up.railway.app/webhook/e978a23b-ada4-4ed5-8a59-027824d2adaf"
     
     webhook_payload = {
         "profile_id": profile_id,
@@ -367,6 +367,55 @@ async def get_company_profile(profile_id: str, current_request: Request):
     except Exception as e:
         logger.error(f"Error fetching company profile {profile_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch company profile")
+
+@router.delete("/{profile_id}")
+async def delete_company_profile(profile_id: str, current_request: Request):
+    """
+    Delete a company profile by ID
+    """
+    try:
+        # Extract user info from JWT token
+        auth_header = current_request.headers.get("authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
+        
+        token = auth_header.split(" ")[1]
+        user = validate_token(token)
+        user_id = user.get("id")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid user session")
+        
+        logger.info(f"Deleting company profile {profile_id} for user {user_id}")
+        
+        supabase = get_db()
+        
+        # Verify the profile exists and belongs to the user
+        profile_check = supabase.table('company_profiles').select('profile_id, company_name').eq('profile_id', profile_id).eq('blayz_user_id', user_id).execute()
+        
+        if not profile_check.data:
+            raise HTTPException(status_code=404, detail="Profile not found or access denied")
+        
+        profile_name = profile_check.data[0]['company_name']
+        
+        # Delete the profile
+        result = supabase.table('company_profiles').delete().eq('profile_id', profile_id).eq('blayz_user_id', user_id).execute()
+        
+        if not result.data:
+            raise HTTPException(status_code=500, detail="Failed to delete profile")
+        
+        logger.info(f"Successfully deleted company profile {profile_id} ({profile_name}) for user {user_id}")
+        
+        return {
+            "success": True,
+            "message": f"Company profile '{profile_name}' deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting company profile {profile_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to delete company profile")
 
 @router.patch("/associate-campaign/{campaign_id}")
 async def associate_campaign_with_profile(

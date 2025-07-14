@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { createCompanyProfile, getCompanyProfiles } from '../lib/apiClient';
+import { createCompanyProfile, getCompanyProfiles, deleteCompanyProfile } from '../lib/apiClient';
 import supabase from '../lib/supabase';
 
 export default function CompanyProfilesPage() {
@@ -13,6 +13,9 @@ export default function CompanyProfilesPage() {
   const [toastMessage, setToastMessage] = useState(null);
   const [realtimeConnected, setRealtimeConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [deleteMode, setDeleteMode] = useState(new Set());
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     loadProfiles();
@@ -131,6 +134,8 @@ export default function CompanyProfilesPage() {
       }
     };
   }, []); // Remove realtimeConnected from dependencies to avoid infinite loop
+
+
 
   const loadProfiles = async () => {
     setLoading(true);
@@ -288,6 +293,48 @@ export default function CompanyProfilesPage() {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleDeleteProfile = async (profile) => {
+    setIsDeleting(true);
+    try {
+      const response = await deleteCompanyProfile(profile.id);
+      
+      if (response && response.success) {
+        // Remove from the local state immediately
+        setProfiles(prevProfiles => prevProfiles.filter(p => p.id !== profile.id));
+        const successMessage = profile.status === 'processing' || profile.status === 'pending' 
+          ? `✅ Profile "${profile.name}" canceled successfully`
+          : `✅ Profile "${profile.name}" deleted successfully`;
+        showToast(successMessage, 'success');
+        setShowDeleteConfirm(null);
+        // Clear delete mode for this profile
+        setDeleteMode(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(profile.id);
+          return newSet;
+        });
+      } else {
+        throw new Error(response?.message || 'Failed to delete profile');
+      }
+    } catch (err) {
+      console.error('Error deleting profile:', err);
+      showToast(`❌ Failed to delete profile: ${err.message}`, 'error');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const toggleDeleteMode = (profileId) => {
+    setDeleteMode(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(profileId)) {
+        newSet.delete(profileId);
+      } else {
+        newSet.add(profileId);
+      }
+      return newSet;
+    });
   };
 
   const formatDate = (dateString) => {
@@ -605,22 +652,67 @@ export default function CompanyProfilesPage() {
                     <div className="flex items-center space-x-3">
                       {profile.status === 'completed' ? (
                         <button 
-                          onClick={() => viewProfile(profile)}
-                          className="flex-1 text-center py-2 px-4 bg-white text-primary font-semibold rounded-xl hover:bg-primary hover:text-white transition-all duration-300 border border-primary text-sm"
+                          onClick={() => {
+                            if (deleteMode.has(profile.id)) {
+                              setShowDeleteConfirm(profile);
+                            } else {
+                              viewProfile(profile);
+                            }
+                          }}
+                          className={`flex-1 text-center py-2 px-4 font-semibold rounded-xl transition-all duration-300 border text-sm ${
+                            deleteMode.has(profile.id) 
+                              ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:text-red-700' 
+                              : 'bg-white text-primary border-primary hover:bg-primary hover:text-white'
+                          }`}
                         >
-                          View Profile
+                          {deleteMode.has(profile.id) ? 'Delete Profile' : 'View Profile'}
                         </button>
                       ) : profile.status === 'failed' ? (
-                        <div className="flex-1 text-center py-2 px-4 bg-red-50 text-red-600 font-semibold rounded-xl border border-red-200 text-sm">
-                          Generation Failed
-                        </div>
+                        <button 
+                          onClick={() => {
+                            if (deleteMode.has(profile.id)) {
+                              setShowDeleteConfirm(profile);
+                            }
+                          }}
+                          className={`flex-1 text-center py-2 px-4 font-semibold rounded-xl transition-all duration-300 border text-sm ${
+                            deleteMode.has(profile.id) 
+                              ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200 hover:text-red-800' 
+                              : 'bg-red-50 text-red-600 border-red-200 cursor-default'
+                          }`}
+                        >
+                          {deleteMode.has(profile.id) ? 'Delete Profile' : 'Generation Failed'}
+                        </button>
                       ) : (
-                        <div className="flex-1 text-center py-2 px-4 bg-yellow-50 text-yellow-600 font-semibold rounded-xl border border-yellow-200 text-sm flex items-center justify-center gap-2">
-                          <div className="animate-spin h-3 w-3 border border-current rounded-full border-t-transparent"></div>
-                          {profile.status === 'pending' ? 'Pending...' : 'Processing...'}
-                        </div>
+                        <button 
+                          onClick={() => {
+                            if (deleteMode.has(profile.id)) {
+                              setShowDeleteConfirm(profile);
+                            }
+                          }}
+                          className={`flex-1 text-center py-2 px-4 font-semibold rounded-xl transition-all duration-300 border text-sm flex items-center justify-center gap-2 ${
+                            deleteMode.has(profile.id) 
+                              ? 'bg-red-100 text-red-700 border-red-300 hover:bg-red-200 hover:text-red-800' 
+                              : 'bg-yellow-50 text-yellow-600 border-yellow-200 cursor-default'
+                          }`}
+                        >
+                          {deleteMode.has(profile.id) ? (
+                            'Cancel Profile'
+                          ) : (
+                            <>
+                              <div className="animate-spin h-3 w-3 border border-current rounded-full border-t-transparent"></div>
+                              {profile.status === 'pending' ? 'Pending...' : 'Processing...'}
+                            </>
+                          )}
+                        </button>
                       )}
-                      <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-white rounded-xl transition-all duration-300">
+                      <button 
+                        onClick={() => toggleDeleteMode(profile.id)}
+                        className={`p-2 rounded-xl transition-all duration-300 ${
+                          deleteMode.has(profile.id) 
+                            ? 'text-red-600 hover:text-red-700 hover:bg-red-50' 
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-white'
+                        }`}
+                      >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
                         </svg>
@@ -632,6 +724,17 @@ export default function CompanyProfilesPage() {
             </div>
           )}
         </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <DeleteConfirmationModal
+            isOpen={!!showDeleteConfirm}
+            profile={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(null)}
+            onConfirm={() => handleDeleteProfile(showDeleteConfirm)}
+            isDeleting={isDeleting}
+          />
+        )}
 
         {/* Create Profile Modal */}
         {showCreateModal && (
@@ -864,6 +967,85 @@ function CreateProfileModal({ isOpen, onClose, onSubmit, isCreating }) {
             </>
           )}
         </form>
+      </div>
+    </div>
+  );
+} 
+
+// Delete Confirmation Modal Component
+function DeleteConfirmationModal({ isOpen, profile, onClose, onConfirm, isDeleting }) {
+  if (!isOpen || !profile) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        <div className="p-8">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              {profile.status === 'processing' || profile.status === 'pending' ? 'Cancel Profile' : 'Delete Profile'}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {profile.status === 'processing' || profile.status === 'pending' ? (
+                <>
+                  Are you sure you want to cancel the profile generation for <span className="font-semibold">"{profile.name}"</span>? This will stop the current analysis process.
+                </>
+              ) : (
+                <>
+                  Are you sure you want to delete the profile for <span className="font-semibold">"{profile.name}"</span>? This action cannot be undone.
+                </>
+              )}
+            </p>
+            
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-red-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <p className="text-red-800 font-medium text-sm">Warning</p>
+                  <p className="text-red-700 text-sm mt-1">
+                    {profile.status === 'processing' || profile.status === 'pending' ? (
+                      'This will stop the current analysis and remove the profile from your dashboard.'
+                    ) : (
+                      'All associated data, insights, and analysis will be permanently deleted.'
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex space-x-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 py-3 px-6 border-2 border-gray-300 text-gray-700 font-semibold rounded-2xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
+              disabled={isDeleting}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={onConfirm}
+              disabled={isDeleting}
+              className="flex-1 py-3 px-6 bg-red-600 text-white font-semibold rounded-2xl hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-red-500/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 disabled:transform-none flex items-center justify-center"
+            >
+              {isDeleting ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  {profile.status === 'processing' || profile.status === 'pending' ? 'Canceling...' : 'Deleting...'}
+                </>
+              ) : (
+                profile.status === 'processing' || profile.status === 'pending' ? 'Cancel Profile' : 'Delete Profile'
+              )}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

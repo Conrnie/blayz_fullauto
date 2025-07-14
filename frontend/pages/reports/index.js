@@ -396,14 +396,36 @@ export default function ReportsList() {
         console.warn('[Report Gen] NEXT_PUBLIC_YOUR_SHARED_SECRET not found - some functions may fail');
       }
 
-      // Helper function to call Edge Functions directly
+      // Helper function to call Edge Functions via proxies
       const callEdgeFunction = async (functionName, payload) => {
-        const functionUrl = `${supabaseUrl}/functions/v1/${functionName}`;
-        console.log(`[Report Gen] Calling ${functionName} directly...`);
+        let proxyUrl;
+        switch (functionName) {
+          case 'get-anomaly-analysis':
+            proxyUrl = '/api/proxy-anomaly';
+            break;
+          case 'get-trend-analysis':
+            proxyUrl = '/api/proxy-trend';
+            break;
+          case 'get-performance-analysis':
+            proxyUrl = '/api/proxy-performance';
+            break;
+          case 'ensure-data-is-fresh':  // New case for data freshness
+            proxyUrl = '/api/proxy-ensure-fresh';
+            break;
+          case 'get-synthesized-report':  // New case for synthesized report
+            proxyUrl = '/api/proxy-synthesized-report';
+            break;
+          default:
+            throw new Error(`Unknown function: ${functionName}`);
+        }
         
-        const response = await fetch(functionUrl, {
-        method: 'POST',
-          headers,
+        console.log(`[Report Gen] Calling ${functionName} via proxy ${proxyUrl}...`);
+        
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
           body: JSON.stringify(payload)
         });
 
@@ -440,13 +462,10 @@ export default function ReportsList() {
           numDays: numDays
         },
         anomaly: {
-          campaignId: selectedCampaign.id,
-          numDays: numDays
+          campaignId: selectedCampaign.id
         },
         performance: {
-          campaignId: selectedCampaign.id,
-          startDate,
-          endDate
+          campaignId: selectedCampaign.id
         }
       };
 
@@ -573,7 +592,7 @@ export default function ReportsList() {
       userAuthToken = sessionData.session.access_token;
 
       // Call the backend sync endpoint
-      const syncEndpoint = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/sync-meta-data`;
+      const syncEndpoint = '/api/proxy-sync-meta';  // Updated to use secure proxy
       console.log(`[Data Sync] >>> Calling backend sync endpoint: ${syncEndpoint}`);
       
       const response = await fetch(syncEndpoint, {

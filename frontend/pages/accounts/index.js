@@ -373,7 +373,6 @@ const AccountsPage = () => {
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account ID</th>
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Currency</th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
                  {/* Add Business Name if desired */}
                  {/* <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Business</th> */}
               </tr>
@@ -393,7 +392,6 @@ const AccountsPage = () => {
                     </span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{account.currency}</td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{account.balance}</td>
                   {/* Render Business Name if column added */}
                   {/* <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{account.business_name || '-'}</td> */}
                 </tr>
@@ -511,7 +509,6 @@ const AccountsPage = () => {
                           <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Account ID</th>
                           <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                           <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Currency</th>
-                          <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Balance</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -541,9 +538,6 @@ const AccountsPage = () => {
                                 </span>
                               </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{account.currency}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900 font-medium">{account.balance}</div>
-                              </td>
                             </tr>
                           ))}
                       </tbody>
