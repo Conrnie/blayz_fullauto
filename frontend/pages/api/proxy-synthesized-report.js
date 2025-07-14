@@ -1,5 +1,6 @@
 // New proxy for get-synthesized-report
 import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
 
 export default async function handler(req, res) {
   // Set CORS headers
@@ -21,11 +22,13 @@ export default async function handler(req, res) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const sharedSecret = process.env.YOUR_SHARED_SECRET;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_KEY;
+    const supabaseJwtSecret = process.env.SUPABASE_JWT_SECRET;
 
     console.log('[Proxy] Environment check:', {
       supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
       sharedSecret: sharedSecret ? 'Set' : 'Missing',
-      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing'
+      serviceRoleKey: serviceRoleKey ? 'Set' : 'Missing',
+      supabaseJwtSecret: supabaseJwtSecret ? 'Set' : 'Missing',
     });
 
     if (!supabaseUrl) {
@@ -34,6 +37,10 @@ export default async function handler(req, res) {
 
     if (!sharedSecret && !serviceRoleKey) {
       throw new Error('Neither YOUR_SHARED_SECRET nor SUPABASE_SERVICE_KEY configured');
+    }
+
+    if (!supabaseJwtSecret) {
+      throw new Error('SUPABASE_JWT_SECRET not configured');
     }
 
     // Validate user authentication
@@ -45,18 +52,22 @@ export default async function handler(req, res) {
 
     const token = authHeader.split(' ')[1];
     
-    // Create Supabase client to validate user
-    const supabase = createClient(supabaseUrl, serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-    
-    // Validate user token
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-    
-    if (userError || !user) {
-      console.log('[Proxy] Invalid token or user not found:', userError?.message);
-      return res.status(401).json({ error: 'Authentication failed' });
+    // Validate JWT using jsonwebtoken
+    let decodedToken;
+    try {
+      decodedToken = jwt.verify(token, supabaseJwtSecret);
+    } catch (error) {
+      console.log('[Proxy] JWT validation error:', error.message);
+      return res.status(401).json({ error: 'Invalid token' });
     }
     
-    console.log('[Proxy] User authenticated:', user.id);
+    const userId = decodedToken.sub;
+    if (!userId) {
+      console.log('[Proxy] No user ID in token');
+      return res.status(401).json({ error: 'Invalid user session' });
+    }
+    
+    console.log('[Proxy] User authenticated:', userId);
 
     const edgeUrl = `${supabaseUrl}/functions/v1/get-synthesized-report`;
     const authToken = sharedSecret || serviceRoleKey;
@@ -67,7 +78,7 @@ export default async function handler(req, res) {
     // Pass user info to the Edge Function
     const requestBody = {
       ...req.body,
-      user_id: user.id // Ensure user_id is passed
+      user_id: userId // Ensure user_id is passed
     };
 
     const response = await fetch(edgeUrl, {
