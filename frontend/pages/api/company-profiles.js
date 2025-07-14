@@ -169,9 +169,10 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               profile_id: profileId,
+              blayz_user_id: userId,
               company_name,
               website_url: formattedUrl,
-              user_id: userId
+              user_id: userId // Keep this for backward compatibility if needed
             })
           }).catch(error => {
             console.error('Failed to trigger n8n webhook:', error);
