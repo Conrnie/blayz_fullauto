@@ -73,7 +73,7 @@ export async function fetchWithAuth(url, options = {}) {
 export async function createCompanyProfile(companyName, websiteUrl) {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
   
-  return fetchWithAuth(`${backendUrl}/api/company-profiles/create`, {
+  return fetchWithAuth(`${backendUrl}/api/company-profiles`, {
     method: 'POST',
     body: JSON.stringify({ company_name: companyName, website_url: websiteUrl })
   });

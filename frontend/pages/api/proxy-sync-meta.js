@@ -105,7 +105,7 @@ export default async function handler(req, res) {
     let result;
     try {
       result = await response.json();
-      console.log('[Proxy] Edge function response:', result);
+    console.log('[Proxy] Edge function response:', result);
     } catch (jsonError) {
       console.error('[Proxy] Failed to parse JSON response:', jsonError.message);
       if (response.ok) {

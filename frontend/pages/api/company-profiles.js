@@ -179,7 +179,7 @@ export default async function handler(req, res) {
         } else {
           console.warn('WEBHOOK_N8N_URL not configured - skipping webhook trigger');
         }
-
+        
         return res.status(200).json({
           success: true,
           message: "Company profile creation started. You'll be notified when it's ready!",
