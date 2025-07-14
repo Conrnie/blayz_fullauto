@@ -43,6 +43,12 @@ export default async function handler(req, res) {
       throw new Error('SUPABASE_JWT_SECRET not configured');
     }
 
+    // +++ Debug: Log env var status +++
+    console.log('[Proxy Debug] SUPABASE_JWT_SECRET loaded:', !!supabaseJwtSecret);
+    const authHeader = req.headers.authorization;
+    const token = authHeader ? authHeader.split(' ')[1] : 'No token';
+    console.log('[Proxy Debug] Token to verify:', token ? token.substring(0, 20) + '...' : 'No token');
+
     // Validate user authentication
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -52,12 +58,16 @@ export default async function handler(req, res) {
 
     const token = authHeader.split(' ')[1];
     
+    // +++ Debug: Log before verification +++
+    console.log('[Proxy Debug] Attempting JWT verification...');
+    
     // Validate JWT using jsonwebtoken
     let decodedToken;
     try {
       decodedToken = jwt.verify(token, supabaseJwtSecret);
+      console.log('[Proxy Debug] JWT verified successfully for user:', decodedToken.sub); // +++ Debug success +++
     } catch (error) {
-      console.log('[Proxy] JWT validation error:', error.message);
+      console.log('[Proxy Debug] JWT validation failed:', error.message);
       return res.status(401).json({ error: 'Invalid token' });
     }
     
