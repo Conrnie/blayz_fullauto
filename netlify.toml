@@ -16,7 +16,7 @@
   FACEBOOK_APP_SECRET = "e602ce247ad4a1219e3b691200b22fa3"
   NEXT_PUBLIC_API_URL = "https://www.blayz.io/api"
   NEXT_PUBLIC_APP_URL = "https://www.blayz.io"
-  NEXT_PUBLIC_BACKEND_API_URL = "https://www.blayz.io"
+  NEXT_PUBLIC_BACKEND_URL = "https://www.blayz.io"
   FRONTEND_URL = "https://www.blayz.io"
   NEXTAUTH_URL = "https://www.blayz.io/api/auth"
   YOUR_SHARED_SECRET = "WByjS0E2PaeQ7cGLMsRd6zcD1"
