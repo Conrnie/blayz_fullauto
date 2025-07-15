@@ -164,21 +164,35 @@ export default async function handler(req, res) {
         // Trigger n8n webhook asynchronously
         const n8nWebhookUrl = process.env.WEBHOOK_N8N_URL;
         if (n8nWebhookUrl) {
+          console.log(`[Webhook] Triggering n8n webhook for profile: ${profileId}`);
+          console.log(`[Webhook] n8n URL: ${n8nWebhookUrl}`);
+          
+          const webhookPayload = {
+            profile_id: profileId,
+            company_name,
+            website_url: formattedUrl
+          };
+          
+          console.log(`[Webhook] Payload:`, JSON.stringify(webhookPayload, null, 2));
+          
           fetch(n8nWebhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              profile_id: profileId,
-              blayz_user_id: userId,
-              company_name,
-              website_url: formattedUrl,
-              user_id: userId // Keep this for backward compatibility if needed
-            })
-          }).catch(error => {
-            console.error('Failed to trigger n8n webhook:', error);
+            body: JSON.stringify(webhookPayload)
+          })
+          .then(response => {
+            console.log(`[Webhook] n8n response status: ${response.status}`);
+            if (!response.ok) {
+              console.error(`[Webhook] n8n webhook failed with status: ${response.status}`);
+            } else {
+              console.log(`[Webhook] n8n webhook triggered successfully`);
+            }
+          })
+          .catch(error => {
+            console.error('[Webhook] Failed to trigger n8n webhook:', error);
           });
         } else {
-          console.warn('WEBHOOK_N8N_URL not configured - skipping webhook trigger');
+          console.warn('[Webhook] WEBHOOK_N8N_URL not configured - skipping webhook trigger');
         }
         
         return res.status(200).json({
