@@ -425,6 +425,7 @@ export default function ReportsList() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${userSupabaseAccessToken}`,
           },
           body: JSON.stringify(payload)
         });

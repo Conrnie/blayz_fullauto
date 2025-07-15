@@ -85,15 +85,25 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Shared-Secret': authToken,
+        'Authorization': `Bearer ${authToken}`,
       },
       body: JSON.stringify(requestBody),
     });
 
     console.log('[Proxy] Edge function response status:', response.status);
     
-    const result = await response.json();
-    console.log('[Proxy] Edge function response:', result);
+    let result;
+    try {
+      result = await response.json();
+      console.log('[Proxy] Edge function response:', result);
+    } catch (jsonError) {
+      console.error('[Proxy] Failed to parse JSON response:', jsonError.message);
+      if (response.ok) {
+        return res.status(200).json({ success: true, message: 'Operation completed successfully' });
+      } else {
+        return res.status(response.status).json({ error: 'Invalid response format from Edge Function' });
+      }
+    }
 
     if (!response.ok) {
       console.error('[Proxy] Edge function error:', result);
