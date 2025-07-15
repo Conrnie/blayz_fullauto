@@ -152,11 +152,6 @@ export default async function handler(req, res) {
 
         console.log(`Created profile record with ID: ${profileId}`);
         
-        // Debug: Check environment variables
-        console.log(`[Debug] Environment variables check:`);
-        console.log(`[Debug] WEBHOOK_N8N_URL exists: ${!!process.env.WEBHOOK_N8N_URL}`);
-        console.log(`[Debug] WEBHOOK_N8N_URL length: ${process.env.WEBHOOK_N8N_URL?.length || 0}`);
-        
         // Update status to processing
         await supabase
           .from('company_profiles')
@@ -166,10 +161,12 @@ export default async function handler(req, res) {
           })
           .eq('profile_id', profileId);
 
+        console.log(`Updated profile ${profileId} status to processing`);
+
         // Trigger n8n webhook asynchronously
         const n8nWebhookUrl = process.env.WEBHOOK_N8N_URL;
-        console.log(`[Webhook] Starting webhook trigger process...`);
-        console.log(`[Webhook] n8nWebhookUrl value: ${n8nWebhookUrl ? 'SET' : 'NOT SET'}`);
+        console.log(`[Webhook Debug] WEBHOOK_N8N_URL environment variable:`, n8nWebhookUrl ? 'SET' : 'NOT SET');
+        console.log(`[Webhook Debug] Full webhook URL:`, n8nWebhookUrl);
         
         if (n8nWebhookUrl) {
           console.log(`[Webhook] Triggering n8n webhook for profile: ${profileId}`);
@@ -201,7 +198,6 @@ export default async function handler(req, res) {
           });
         } else {
           console.warn('[Webhook] WEBHOOK_N8N_URL not configured - skipping webhook trigger');
-          console.warn('[Webhook] Please set WEBHOOK_N8N_URL in Netlify environment variables');
         }
         
         return res.status(200).json({
