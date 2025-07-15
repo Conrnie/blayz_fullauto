@@ -73,10 +73,16 @@ export async function fetchWithAuth(url, options = {}) {
 export async function createCompanyProfile(companyName, websiteUrl) {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
   
-  return fetchWithAuth(`${backendUrl}/api/company-profiles`, {
+  console.log('[API Client] Creating company profile:', { companyName, websiteUrl });
+  console.log('[API Client] Backend URL:', backendUrl);
+  
+  const result = await fetchWithAuth(`${backendUrl}/api/company-profiles`, {
     method: 'POST',
     body: JSON.stringify({ company_name: companyName, website_url: websiteUrl })
   });
+  
+  console.log('[API Client] Create profile result:', result);
+  return result;
 }
 
 export async function associateProfileToCampaign(campaignId, profileId) {
