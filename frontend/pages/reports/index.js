@@ -323,22 +323,14 @@ export default function ReportsList() {
 
   // --- Report Generation Handler (Direct Supabase Edge Functions) ---
   const handleGenerateFullReport = async () => {
-    console.log("[Report Gen] Starting direct Supabase Edge Function report generation...");
+    console.log("[Report Gen] Starting simplified report generation...");
     if (!selectedCampaign || !selectedCampaign.id) {
       setGenerationError('Please select a Campaign.');
       return;
     }
 
-    // Calculate startDate and endDate for the last 90 days
-    const today = new Date();
-    const endDate = today.toISOString().split('T')[0]; // YYYY-MM-DD
-
-    const ninetyDaysAgo = new Date(today);
-    ninetyDaysAgo.setDate(today.getDate() - 89); 
-    const startDate = ninetyDaysAgo.toISOString().split('T')[0]; // YYYY-MM-DD
-
-    console.log(`[Report Gen] Using 90-day range: ${startDate} to ${endDate} for campaign: ${selectedCampaign.id}`);
-    console.log(`[Report Gen] Using direct Supabase Edge Functions (150s timeout each)`);
+    console.log(`[Report Gen] Using 90-day analysis period for campaign: ${selectedCampaign.id}`);
+    console.log(`[Report Gen] Using internal Edge Functions (no timeout limits)`);
 
     setIsGeneratingFullReport(true);
     setGenerationError(null);
@@ -351,162 +343,34 @@ export default function ReportsList() {
         throw new Error('User session not found. Please log in again.');
       }
       const userId = session.user.id;
-      const userSupabaseAccessToken = session.access_token;
 
-      // Get Supabase configuration for direct function calls
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      const sharedSecret = process.env.NEXT_PUBLIC_YOUR_SHARED_SECRET;
-
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error('Supabase configuration missing');
-      }
-
-      // Get campaign details first
-      const { data: campaignData, error: campaignError } = await supabase
-        .from('campaigns')
-        .select('ad_account_id')
-        .eq('id', selectedCampaign.id)
-        .eq('user_id', userId)
-        .single();
-
-      if (campaignError || !campaignData) {
-        throw new Error('Campaign not found or access denied');
-      }
-
-      const dbAdAccountId = campaignData.ad_account_id;
-
-      // Calculate date range
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      const diffTime = Math.abs(end - start);
-      const numDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-      // Prepare headers for Edge Function calls
-      const headers = {
-        'Authorization': `Bearer ${supabaseAnonKey}`,
-        'Content-Type': 'application/json',
-      };
-
-      // Add shared secret for authentication
-      if (sharedSecret) {
-        headers['X-Shared-Secret'] = sharedSecret;
-        console.log('[Report Gen] Using shared secret for authentication');
-      } else {
-        console.warn('[Report Gen] NEXT_PUBLIC_YOUR_SHARED_SECRET not found - some functions may fail');
-      }
-
-      // Helper function to call Edge Functions via proxies
-      const callEdgeFunction = async (functionName, payload) => {
-        let proxyUrl;
-        switch (functionName) {
-          case 'get-anomaly-analysis':
-            proxyUrl = '/api/proxy-anomaly';
-            break;
-          case 'get-trend-analysis':
-            proxyUrl = '/api/proxy-trend';
-            break;
-          case 'get-performance-analysis':
-            proxyUrl = '/api/proxy-performance';
-            break;
-          case 'ensure-data-is-fresh':  // New case for data freshness
-            proxyUrl = '/api/proxy-ensure-fresh';
-            break;
-          case 'get-synthesized-report':  // New case for synthesized report
-            proxyUrl = '/api/proxy-synthesized-report';
-            break;
-          default:
-            throw new Error(`Unknown function: ${functionName}`);
-        }
-        
-        console.log(`[Report Gen] Calling ${functionName} via proxy ${proxyUrl}...`);
-        
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${userSupabaseAccessToken}`,
-          },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`[Report Gen] ${functionName} failed:`, errorText);
-          throw new Error(`${functionName} failed: ${response.status} ${errorText.substring(0, 200)}`);
-        }
-
-        const result = await response.json();
-        console.log(`[Report Gen] ${functionName} completed successfully`);
-        return result;
-      };
-
-      // Step 1: Data Freshness Check
-      setCurrentStage('Preparing your data...');
-      setProgressValue(15);
-      
-      const freshnessResult = await callEdgeFunction('ensure-data-is-fresh', {
+      // Simplified payload - only campaignId and userId required
+      const reportPayload = {
+        campaignId: selectedCampaign.id,
         userId,
-        dbAdAccountId,
-        userSupabaseAccessToken,
-        selectedMetaCampaignId: selectedCampaign.meta_campaign_id
-      });
-      console.log('[Report Gen] Freshness check completed:', freshnessResult);
+        numDays: 90  // 90-day analysis period
+      };
 
-      // Step 2-4: Run all three analyses in parallel for maximum speed
-      setCurrentStage('Analyzing campaign performance...');
+      console.log('[Report Gen] Calling get-synthesized-report via proxy...');
+      setCurrentStage('Generating comprehensive analysis...');
       setProgressValue(25);
 
-      const analysisPayloads = {
-        trend: {
-          campaignId: selectedCampaign.id,
-          numDays: numDays
+      const response = await fetch('/api/proxy-synthesized-report', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        anomaly: {
-          campaignId: selectedCampaign.id
-        },
-        performance: {
-          campaignId: selectedCampaign.id
-        }
-      };
-
-      console.log('[Report Gen] Starting parallel analysis calls...');
-      const analysisResults = await Promise.allSettled([
-        callEdgeFunction('get-trend-analysis', analysisPayloads.trend),
-        callEdgeFunction('get-anomaly-analysis', analysisPayloads.anomaly),
-        callEdgeFunction('get-performance-analysis', analysisPayloads.performance)
-      ]);
-
-      const trendResult = analysisResults[0].status === 'fulfilled' ? analysisResults[0].value : null;
-      const anomalyResult = analysisResults[1].status === 'fulfilled' ? analysisResults[1].value : null;
-      const performanceResult = analysisResults[2].status === 'fulfilled' ? analysisResults[2].value : null;
-
-      console.log('[Report Gen] Analyses completed:', {
-        trend: trendResult ? 'Success' : 'Failed',
-        anomaly: anomalyResult ? 'Success' : 'Failed', 
-        performance: performanceResult ? 'Success' : 'Failed'
+        body: JSON.stringify(reportPayload)
       });
 
-      if (!trendResult && !anomalyResult && !performanceResult) {
-        throw new Error('All analyses failed. Please try again later.');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[Report Gen] Synthesis failed:', errorText);
+        throw new Error(`Report generation failed: ${response.status} ${errorText.substring(0, 200)}`);
       }
 
-      // Step 5: Synthesize Final Report
-      setCurrentStage('Generating your report...');
-      setProgressValue(75);
-
-      const synthesizePayload = {
-        userId,
-        campaignId: selectedCampaign.id,
-        accountId: dbAdAccountId || 'N/A',
-        startDate,
-        endDate,
-        trendAnalysisText: trendResult?.analysis || "Trend analysis unavailable due to timeout or error.",
-        anomalyAnalysisText: anomalyResult?.analysis || "Anomaly analysis unavailable due to timeout or error.",
-        performanceAnalysisText: performanceResult?.analysis || "Performance analysis unavailable due to timeout or error."
-      };
-
-      const synthesizeResult = await callEdgeFunction('get-synthesized-report', synthesizePayload);
+      const synthesizeResult = await response.json();
       console.log('[Report Gen] Report synthesis completed:', synthesizeResult);
 
       setCurrentStage('Report Complete!');
@@ -514,14 +378,14 @@ export default function ReportsList() {
       
       // Enhanced report polling mechanism for reliable report display
       if (synthesizeResult?.report_id) {
-      await pollForNewReport(selectedCampaign.id, synthesizeResult.report_id);
+        await pollForNewReport(selectedCampaign.id, synthesizeResult.report_id);
       } else {
         // Fallback: just reload reports
         setTimeout(() => loadReports(selectedCampaign.id, true), 2000);
       }
 
     } catch (err) {
-      console.error("[Report Gen] Error in direct Edge Function report generation:", err);
+      console.error("[Report Gen] Error in simplified report generation:", err);
       setGenerationError(err.message || 'An unexpected error occurred during report generation.');
       setCurrentStage('Error');
       setProgressValue(0);
