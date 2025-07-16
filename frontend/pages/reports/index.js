@@ -471,17 +471,25 @@ export default function ReportsList() {
       };
 
       console.log('[Report Gen] Starting parallel analysis calls...');
-      const [trendResult, anomalyResult, performanceResult] = await Promise.all([
+      const analysisResults = await Promise.allSettled([
         callEdgeFunction('get-trend-analysis', analysisPayloads.trend),
         callEdgeFunction('get-anomaly-analysis', analysisPayloads.anomaly),
         callEdgeFunction('get-performance-analysis', analysisPayloads.performance)
       ]);
 
-      console.log('[Report Gen] All analyses completed:', {
+      const trendResult = analysisResults[0].status === 'fulfilled' ? analysisResults[0].value : null;
+      const anomalyResult = analysisResults[1].status === 'fulfilled' ? analysisResults[1].value : null;
+      const performanceResult = analysisResults[2].status === 'fulfilled' ? analysisResults[2].value : null;
+
+      console.log('[Report Gen] Analyses completed:', {
         trend: trendResult ? 'Success' : 'Failed',
         anomaly: anomalyResult ? 'Success' : 'Failed', 
         performance: performanceResult ? 'Success' : 'Failed'
       });
+
+      if (!trendResult && !anomalyResult && !performanceResult) {
+        throw new Error('All analyses failed. Please try again later.');
+      }
 
       // Step 5: Synthesize Final Report
       setCurrentStage('Generating your report...');
@@ -493,9 +501,9 @@ export default function ReportsList() {
         accountId: dbAdAccountId || 'N/A',
         startDate,
         endDate,
-        trendAnalysisText: trendResult?.analysis || "No trend analysis available.",
-        anomalyAnalysisText: anomalyResult?.analysis || "No anomaly analysis available.",
-        performanceAnalysisText: performanceResult?.analysis || "No performance analysis available."
+        trendAnalysisText: trendResult?.analysis || "Trend analysis unavailable due to timeout or error.",
+        anomalyAnalysisText: anomalyResult?.analysis || "Anomaly analysis unavailable due to timeout or error.",
+        performanceAnalysisText: performanceResult?.analysis || "Performance analysis unavailable due to timeout or error."
       };
 
       const synthesizeResult = await callEdgeFunction('get-synthesized-report', synthesizePayload);
