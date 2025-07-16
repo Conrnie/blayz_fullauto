@@ -101,7 +101,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Shared-Secret': authToken,
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify(requestBody),
         signal: controller.signal,
