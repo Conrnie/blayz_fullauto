@@ -848,4 +848,139 @@ export default function ReportsList() {
 
                           {/* Step 2 */}
                           <div className="flex flex-col items-center w-1/3">
-                            <div className={`
+                            <div className={`rounded-full h-6 w-6 flex items-center justify-center ${
+                              progressValue >= 33 && progressValue < 66 ? 'bg-primary text-white animate-pulse' :
+                              progressValue >= 66 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                            }`}>
+                              <span className="text-xs font-medium">2</span>
+                            </div>
+                            <span className="mt-1 text-center">Analyzing</span>
+                          </div>
+
+                          {/* Step 3 */}
+                          <div className="flex flex-col items-center w-1/3">
+                            <div className={`rounded-full h-6 w-6 flex items-center justify-center ${
+                              progressValue >= 66 && progressValue <= 100 ? 'bg-primary text-white animate-pulse' :
+                              progressValue > 99 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
+                            }`}>
+                              <span className="text-xs font-medium">3</span>
+                            </div>
+                            <span className="mt-1 text-center">Generating</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Previous Reports Card */}
+        {selectedCampaign && (
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <div className="bg-gradient-to-r from-[#1E293B] to-[#334155] px-8 py-6 text-white">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-white">
+                  {getCampaignName(selectedCampaign.id)} <span className="text-primary">Reports</span>
+                </h2>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => loadReports(selectedCampaign.id, true)}
+                    disabled={loadingReports}
+                    className="flex items-center px-3 py-1 bg-white/10 hover:bg-white/20 rounded-md text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh reports list"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${loadingReports ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                  </button>
+                  <span className="bg-primary/20 text-white px-3 py-1 rounded-full text-xs font-medium">
+                    Campaign Selected
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {loadingReports ? (
+                <p className="text-center text-gray-500 py-4">Loading reports...</p>
+              ) : reports.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-8 px-4">
+                  <div className="bg-gray-100 rounded-full p-3 mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No Reports Found</h3>
+                  <p className="mt-2 text-sm text-gray-600">
+                    Generate your first report for this campaign to get started.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Generated On
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200 bg-white">
+                      {reports.map(report => (
+                        <tr key={report.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-10 w-10 rounded-md bg-[#FFF5E9] flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clipRule="evenodd" />
+                                </svg>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900">
+                                  {formatDate(report.report_date)}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  Report #{report.id.substring(0, 8)}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <Link href={`/reports/${report.id}`} legacyBehavior>
+                              <a className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                </svg>
+                                View Report
+                              </a>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+    
+    {/* Footer decoration */}
+    <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden -z-10 opacity-70">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="w-full h-full">
+        <path fill="#FFF5E9" fillOpacity="1" d="M0,224L48,213.3C96,203,192,181,288,160C384,139,480,117,576,122.7C672,128,768,160,864,186.7C960,213,1056,235,1152,213.3C1248,192,1344,128,1392,96L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+      </svg>
+    </div>
+  </div>
+);
+}
