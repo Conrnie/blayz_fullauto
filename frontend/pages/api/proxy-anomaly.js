@@ -81,14 +81,33 @@ export default async function handler(req, res) {
       user_id: userId // Ensure user_id is passed
     };
 
-    const response = await fetch(edgeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Shared-Secret': authToken,
-      },
-      body: JSON.stringify(requestBody),
-    });
+    // Create AbortController for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 150000); // 150 seconds timeout
+
+    let response;
+    try {
+      response = await fetch(edgeUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Shared-Secret': authToken,
+        },
+        body: JSON.stringify(requestBody),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('[Proxy] Edge function timeout after 150 seconds');
+        return res.status(504).json({ 
+          error: 'Request timeout', 
+          details: 'The anomaly analysis request took too long to complete (>150s)' 
+        });
+      }
+      throw error; // Re-throw other errors
+    }
 
     console.log('[Proxy] Edge function response status:', response.status);
     
