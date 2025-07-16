@@ -875,98 +875,97 @@ export default function ReportsList() {
               )}
             </div>
           </div>
-        </div>
-        
-        {/* Previous Reports Card */}
-        {selectedCampaign && (
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-            <div className="bg-gradient-to-r from-[#1E293B] to-[#334155] px-8 py-6 text-white">
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold text-white">
-                  {getCampaignName(selectedCampaign.id)} <span className="text-primary">Reports</span>
-                </h2>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => loadReports(selectedCampaign.id, true)}
-                    disabled={loadingReports}
-                    className="flex items-center px-3 py-1 bg-white/10 hover:bg-white/20 rounded-md text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Refresh reports list"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${loadingReports ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Refresh
-                  </button>
-                  <span className="bg-primary/20 text-white px-3 py-1 rounded-full text-xs font-medium">
-                    Campaign Selected
-                  </span>
+          
+          {/* Previous Reports Card */}
+          {selectedCampaign && (
+            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-[#1E293B] to-[#334155] px-8 py-6 text-white">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold text-white">
+                    {getCampaignName(selectedCampaign.id)} <span className="text-primary">Reports</span>
+                  </h2>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => loadReports(selectedCampaign.id, true)}
+                      disabled={loadingReports}
+                      className="flex items-center px-3 py-1 bg-white/10 hover:bg-white/20 rounded-md text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Refresh reports list"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${loadingReports ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Refresh
+                    </button>
+                    <span className="bg-primary/20 text-white px-3 py-1 rounded-full text-xs font-medium">
+                      Campaign Selected
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <div className="p-8">
-              {loadingReports ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  <span className="ml-3 text-gray-500">Loading reports...</span>
-                </div>
-              ) : reports.length === 0 ? (
-                <div className="flex flex-col items-center justify-center text-center py-12 px-4">
-                  <div className="bg-primary/10 rounded-full p-4 mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+              
+              <div className="p-8">
+                {loadingReports ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <span className="ml-3 text-gray-500">Loading reports...</span>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">No Reports Found</h3>
-                  <p className="text-gray-600 max-w-md">
-                    Generate your first report for this campaign to get started with AI-powered insights and recommendations.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {reports.map(report => (
-                    <div key={report.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-sm transition-all duration-200">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" viewBox="0 0 20 20" fill="currentColor">
-                              <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clipRule="evenodd" />
-                            </svg>
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <h3 className="text-sm font-semibold text-gray-900">
-                                Generated on {formatDate(report.report_date)}
-                              </h3>
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                                Report #{report.id.substring(0, 8)}
-                              </span>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Campaign performance analysis and insights
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <Link href={`/reports/${report.id}`} legacyBehavior>
-                            <a className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                ) : reports.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center py-12 px-4">
+                    <div className="bg-primary/10 rounded-full p-4 mb-6">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No Reports Found</h3>
+                    <p className="text-gray-600 max-w-md">
+                      Generate your first report for this campaign to get started with AI-powered insights and recommendations.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {reports.map(report => (
+                      <div key={report.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-sm transition-all duration-200">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm2 10a1 1 0 10-2 0v3a1 1 0 102 0v-3zm2-3a1 1 0 011 1v5a1 1 0 11-2 0v-5a1 1 0 011-1zm4-1a1 1 0 10-2 0v7a1 1 0 102 0V8z" clipRule="evenodd" />
                               </svg>
-                              View Report
-                            </a>
-                          </Link>
+                            </div>
+                            <div>
+                              <div className="flex items-center space-x-2">
+                                <h3 className="text-sm font-semibold text-gray-900">
+                                  Generated on {formatDate(report.report_date)}
+                                </h3>
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                                  Report #{report.id.substring(0, 8)}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 mt-1">
+                                Campaign performance analysis and insights
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0">
+                            <Link href={`/reports/${report.id}`} legacyBehavior>
+                              <a className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="-ml-1 mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                  <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                                </svg>
+                                View Report
+                              </a>
+                            </Link>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
       
       {/* Footer decoration */}
       <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden -z-10 opacity-70">
