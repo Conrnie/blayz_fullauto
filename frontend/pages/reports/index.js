@@ -488,9 +488,19 @@ export default function ReportsList() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (jsonError) {
+          // Handle non-JSON responses (like 504 timeouts)
+          console.error("[Data Sync] Non-JSON error response:", response.status, response.statusText);
+          if (response.status === 504) {
+            throw new Error('Request timeout: The sync operation took too long. Please try again with a smaller date range or contact support if the issue persists.');
+          }
+          throw new Error(`Failed to sync Meta data: ${response.statusText} (${response.status})`);
+        }
         console.error("[Data Sync] Sync endpoint error:", errorData);
-        throw new Error(errorData.detail || `Failed to sync Meta data: ${response.statusText}`);
+        throw new Error(errorData.detail || errorData.error || `Failed to sync Meta data: ${response.statusText}`);
       }
 
       const result = await response.json();

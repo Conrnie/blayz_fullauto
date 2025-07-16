@@ -93,7 +93,7 @@ export default async function handler(req, res) {
 
     // Create AbortController for timeout handling
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 150000); // 150 seconds timeout
+    const timeoutId = setTimeout(() => controller.abort(), 300000); // 300 seconds (5 minutes) timeout
 
     let response;
     try {
@@ -110,10 +110,10 @@ export default async function handler(req, res) {
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
-        console.error('[Proxy] Edge function timeout after 150 seconds');
+        console.error('[Proxy] Edge function timeout after 300 seconds');
         return res.status(504).json({ 
           error: 'Request timeout', 
-          details: 'The meta data sync request took too long to complete (>150s)' 
+          details: 'The meta data sync request took too long to complete (>300s). This might indicate a large amount of data to sync or a temporary issue with the Meta API.' 
         });
       }
       throw error; // Re-throw other errors
