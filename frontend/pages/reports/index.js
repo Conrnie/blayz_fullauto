@@ -966,6 +966,7 @@ export default function ReportsList() {
             </div>
           )}
         </div>
+      </div>
       
       {/* Footer decoration */}
       <div className="absolute bottom-0 left-0 right-0 h-32 overflow-hidden -z-10 opacity-70">
