@@ -875,7 +875,7 @@ export default function ReportsList() {
               )}
             </div>
           </div>
-        )}
+        </div>
         
         {/* Previous Reports Card */}
         {selectedCampaign && (
