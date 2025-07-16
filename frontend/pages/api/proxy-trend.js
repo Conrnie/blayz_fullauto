@@ -1,4 +1,5 @@
 // New proxy for get-trend-analysis
+// Updated with 150s timeout handling - deployment trigger
 import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 
