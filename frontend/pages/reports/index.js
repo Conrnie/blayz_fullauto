@@ -443,9 +443,9 @@ export default function ReportsList() {
     await loadReports(campaignId, true);
   };
 
-  // --- NEW: Handler to fetch initial campaign data ---
+  // --- NEW: Handler to fetch initial campaign data (Async Version) ---
   const handleGetCampaignData = async () => {
-    console.log("[Data Sync] Starting handleGetCampaignData...");
+    console.log("[Data Sync] Starting async handleGetCampaignData...");
     if (!supabase) {
       setGenerationError("Supabase client not available.");
       return;
@@ -456,8 +456,8 @@ export default function ReportsList() {
     }
     setIsSyncingInitialData(true);
     setGenerationError('');
-    setCurrentStage('Syncing Meta account data...'); // Generic message for initial sync
-    setProgressValue(0);
+    setCurrentStage('Starting Meta data sync...'); 
+    setProgressValue(10);
 
     let userAuthToken = null;
 
@@ -471,9 +471,9 @@ export default function ReportsList() {
       }
       userAuthToken = sessionData.session.access_token;
 
-      // Call the backend sync endpoint
-      const syncEndpoint = '/api/proxy-sync-meta';  // Updated to use secure proxy
-      console.log(`[Data Sync] >>> Calling backend sync endpoint: ${syncEndpoint}`);
+      // Start the async sync
+      const syncEndpoint = '/api/sync-meta-async';  
+      console.log(`[Data Sync] >>> Starting async sync: ${syncEndpoint}`);
       
       const response = await fetch(syncEndpoint, {
         method: 'POST',
@@ -483,30 +483,25 @@ export default function ReportsList() {
         },
         body: JSON.stringify({
           user_id: sessionData.session.user.id,
-          ad_account_id: selectedAdAccount // Always use the dropdown value
+          ad_account_id: selectedAdAccount
         }),
       });
 
       if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch (jsonError) {
-          // Handle non-JSON responses (like 504 timeouts)
-          console.error("[Data Sync] Non-JSON error response:", response.status, response.statusText);
-          if (response.status === 504) {
-            throw new Error('Request timeout: The sync operation took too long. Please try again with a smaller date range or contact support if the issue persists.');
-          }
-          throw new Error(`Failed to sync Meta data: ${response.statusText} (${response.status})`);
-        }
-        console.error("[Data Sync] Sync endpoint error:", errorData);
-        throw new Error(errorData.detail || errorData.error || `Failed to sync Meta data: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error("[Data Sync] Failed to start async sync:", errorData);
+        throw new Error(errorData.error || `Failed to start sync: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log("[Data Sync] Sync successful:", result);
-      // alert("Campaign data synced successfully! Campaigns list will refresh."); // Optional: user feedback
-      await loadCampaigns(selectedAdAccount); // Reload campaigns to update the list and hasCampaignData state
+      const syncResult = await response.json();
+      console.log("[Data Sync] Async sync started:", syncResult);
+      
+      const syncId = syncResult.syncId;
+      setCurrentStage('Syncing Meta data...');
+      setProgressValue(30);
+
+      // Poll for completion
+      await pollSyncStatus(syncId, userAuthToken);
 
     } catch (err) {
       console.error("[Data Sync] Error in handleGetCampaignData:", err);
@@ -516,6 +511,59 @@ export default function ReportsList() {
       setCurrentStage('');
       setProgressValue(0); // Reset progress
     }
+  };
+
+  // Poll sync status until completion
+  const pollSyncStatus = async (syncId, userAuthToken) => {
+    const maxPollingTime = 5 * 60 * 1000; // 5 minutes
+    const pollingInterval = 3000; // 3 seconds
+    const startTime = Date.now();
+
+    while (Date.now() - startTime < maxPollingTime) {
+      try {
+        const statusResponse = await fetch(`/api/sync-status?syncId=${syncId}`, {
+          headers: {
+            'Authorization': `Bearer ${userAuthToken}`,
+          },
+        });
+
+        if (!statusResponse.ok) {
+          console.error("[Data Sync] Failed to check sync status");
+          break;
+        }
+
+        const statusData = await statusResponse.json();
+        console.log("[Data Sync] Sync status:", statusData);
+
+        setCurrentStage(statusData.message || 'Syncing...');
+        
+        // Update progress based on status
+        if (statusData.status === 'in_progress') {
+          setProgressValue(50);
+        } else if (statusData.status === 'completed') {
+          setProgressValue(100);
+          setCurrentStage('Sync completed! Refreshing campaigns...');
+          
+          // Reload campaigns after successful sync
+          await loadCampaigns(selectedAdAccount);
+          
+          console.log("[Data Sync] Sync completed successfully");
+          return; // Exit polling loop
+        } else if (statusData.status === 'failed') {
+          throw new Error(statusData.data?.error || 'Sync operation failed');
+        }
+
+        // Wait before next poll
+        await new Promise(resolve => setTimeout(resolve, pollingInterval));
+        
+      } catch (pollError) {
+        console.error("[Data Sync] Error polling sync status:", pollError);
+        throw pollError;
+      }
+    }
+
+    // If we get here, polling timed out
+    throw new Error('Sync operation timed out. Please try again.');
   };
 
   // --- Helper Functions ---
