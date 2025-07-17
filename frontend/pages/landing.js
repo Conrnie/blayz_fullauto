@@ -93,6 +93,15 @@ export default function LandingPage() {
       }
     });
 
+    console.log('Sending PageView to CAPI');
+    fetch('/api/send-conversion-event', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventName: 'PageView'
+      })
+    }).catch(err => console.error('Failed to send PageView:', err));
+
   }, []);
 
   return (

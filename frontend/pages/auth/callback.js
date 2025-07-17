@@ -181,6 +181,23 @@ export default function AuthCallback() {
             localStorage.setItem('pending_meta_provider_token', data.session.provider_token);
           }
           
+          // NEW: Trigger Meta Conversion API event for new registrations via Meta
+          if (data.session.user.app_metadata?.provider === 'facebook') {
+            const createdAt = new Date(data.session.user.created_at);
+            const now = new Date();
+            if (now - createdAt < 60000) { // Within 1 minute - assume new registration
+              console.log('New Meta registration detected - sending CAPI event');
+              fetch('/api/send-conversion-event', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  eventName: 'CompleteRegistration',
+                  email: data.session.user.email // For hashed matching (optional)
+                })
+              }).catch(err => console.error('Failed to send CAPI event:', err));
+            }
+          }
+          
           setIsProcessing(false);
           
           // Check if user needs to connect ad accounts before redirecting
