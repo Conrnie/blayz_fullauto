@@ -89,6 +89,37 @@ export default function AuthCallback() {
                 localStorage.setItem('pending_meta_provider_token', providerToken);
               }
               
+              // NEW: Check for signup attempt and send registration event
+              const isSignupAttempt = localStorage.getItem('meta_signup_attempt') === 'true';
+              if (isSignupAttempt && sessionData.session.user.app_metadata?.provider === 'facebook') {
+                console.log('Signup attempt detected in implicit flow - sending CAPI registration event');
+                
+                // Clear the signup attempt flag
+                localStorage.removeItem('meta_signup_attempt');
+                
+                fetch('/api/send-conversion-event', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    eventName: 'CompleteRegistration',
+                    email: sessionData.session.user.email, // For hashed matching
+                    fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
+                  })
+                })
+                .then(response => response.json())
+                .then(result => {
+                  console.log('CAPI registration event result:', result);
+                  if (result.success) {
+                    console.log('✅ Registration event sent successfully to Meta');
+                  } else {
+                    console.error('❌ Failed to send registration event:', result);
+                  }
+                })
+                .catch(err => {
+                  console.error('❌ Failed to send CAPI registration event:', err);
+                });
+              }
+              
               setIsProcessing(false);
               // Check if user needs to connect ad accounts
               await redirectBasedOnAdAccountStatus(sessionData.session.user.id);
@@ -140,6 +171,37 @@ export default function AuthCallback() {
                 if (sessionData.session.user.app_metadata?.provider === 'facebook' && sessionData.session.provider_token) {
                   console.log('Storing Facebook provider token from fallback session...');
                   localStorage.setItem('pending_meta_provider_token', sessionData.session.provider_token);
+                }
+                
+                // NEW: Check for signup attempt and send registration event
+                const isSignupAttempt = localStorage.getItem('meta_signup_attempt') === 'true';
+                if (isSignupAttempt && sessionData.session.user.app_metadata?.provider === 'facebook') {
+                  console.log('Signup attempt detected in fallback flow - sending CAPI registration event');
+                  
+                  // Clear the signup attempt flag
+                  localStorage.removeItem('meta_signup_attempt');
+                  
+                  fetch('/api/send-conversion-event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      eventName: 'CompleteRegistration',
+                      email: sessionData.session.user.email, // For hashed matching
+                      fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
+                    })
+                  })
+                  .then(response => response.json())
+                  .then(result => {
+                    console.log('CAPI registration event result:', result);
+                    if (result.success) {
+                      console.log('✅ Registration event sent successfully to Meta');
+                    } else {
+                      console.error('❌ Failed to send registration event:', result);
+                    }
+                  })
+                  .catch(err => {
+                    console.error('❌ Failed to send CAPI registration event:', err);
+                  });
                 }
                 
                 setIsProcessing(false);
