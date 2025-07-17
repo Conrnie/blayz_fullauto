@@ -58,8 +58,20 @@ const AccountsPage = () => {
         // Important: Clear the token immediately after reading it.
         localStorage.removeItem('pending_meta_provider_token');
       } else {
-        log('Auto-processing check, but no pending provider token found in localStorage.');
-        // Optionally, could check URL fragment as a fallback, but localStorage is the primary mechanism now.
+        log('No pending provider token found in localStorage, checking current session...');
+        
+        // Check if the current session has a provider token
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.provider_token) {
+            log(`Found provider token in current session: ${session.provider_token.substring(0, 15)}...`);
+            providerToken = session.provider_token;
+          } else {
+            log('No provider token found in current session either.');
+          }
+        } catch (err) {
+          log(`Error checking session for provider token: ${err.message}`);
+        }
       }
       
       // --- Processing ---
