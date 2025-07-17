@@ -15,6 +15,11 @@ const MetaAuthButton = ({ onSuccess, onError, className = '' }) => {
                            window.location.pathname !== '/auth/signup' ? 
                            window.location.pathname : '/reports';
         localStorage.setItem('returnUrl', returnUrl);
+        
+        // Mark as signup attempt if coming from signup page
+        if (window.location.pathname === '/auth/signup') {
+          localStorage.setItem('meta_signup_attempt', 'true');
+        }
       }
       
       const { data, error } = await signInWithProvider('facebook', {

@@ -27,6 +27,8 @@ const SignupForm = () => {
   const handleMetaSuccess = (data) => {
     // The redirect is handled by the OAuth provider and callback
     console.log('Meta auth initiated, waiting for redirect...');
+    // Mark this as a registration attempt for CAPI tracking
+    localStorage.setItem('meta_signup_attempt', 'true');
   };
   
   const handleMetaError = (err) => {

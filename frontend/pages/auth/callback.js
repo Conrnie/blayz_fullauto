@@ -194,15 +194,24 @@ export default function AuthCallback() {
             const createdAt = new Date(data.session.user.created_at);
             const now = new Date();
             const timeDiff = now - createdAt;
+            const isSignupAttempt = localStorage.getItem('meta_signup_attempt') === 'true';
             
             console.log('=== REGISTRATION CHECK ===');
             console.log('User created at:', data.session.user.created_at);
             console.log('Current time:', now.toISOString());
             console.log('Time difference (ms):', timeDiff);
             console.log('Is within 5 minutes?', timeDiff < 300000);
+            console.log('Is signup attempt?', isSignupAttempt);
             
-            if (timeDiff < 300000) { // Within 5 minutes - assume new registration
-              console.log('New Meta registration detected - sending CAPI event');
+            // Send registration event if:
+            // 1. User was created recently (within 5 minutes) OR
+            // 2. This was marked as a signup attempt from the signup page
+            if (timeDiff < 300000 || isSignupAttempt) {
+              console.log('Meta registration detected - sending CAPI event');
+              
+              // Clear the signup attempt flag
+              localStorage.removeItem('meta_signup_attempt');
+              
               fetch('/api/send-conversion-event', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
