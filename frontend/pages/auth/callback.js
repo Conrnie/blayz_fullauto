@@ -92,32 +92,51 @@ export default function AuthCallback() {
               // NEW: Check for signup attempt and send registration event
               const isSignupAttempt = localStorage.getItem('meta_signup_attempt') === 'true';
               if (isSignupAttempt && sessionData.session.user.app_metadata?.provider === 'facebook') {
-                console.log('Signup attempt detected in implicit flow - sending CAPI registration event');
+                // Additional check: ensure this is actually a new user registration
+                const createdAt = new Date(sessionData.session.user.created_at);
+                const now = new Date();
+                const timeDiff = now - createdAt;
+                const isNewUser = timeDiff < 300000; // Within 5 minutes
                 
-                // Clear the signup attempt flag
-                localStorage.removeItem('meta_signup_attempt');
+                console.log('=== REGISTRATION CHECK (Implicit Flow) ===');
+                console.log('User created at:', sessionData.session.user.created_at);
+                console.log('Current time:', now.toISOString());
+                console.log('Time difference (ms):', timeDiff);
+                console.log('Is new user?', isNewUser);
+                console.log('Is signup attempt?', isSignupAttempt);
                 
-                fetch('/api/send-conversion-event', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    eventName: 'CompleteRegistration',
-                    email: sessionData.session.user.email, // For hashed matching
-                    fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
+                if (isNewUser) {
+                  console.log('New user registration confirmed - sending CAPI registration event');
+                  
+                  // Clear the signup attempt flag
+                  localStorage.removeItem('meta_signup_attempt');
+                  
+                  fetch('/api/send-conversion-event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      eventName: 'CompleteRegistration',
+                      email: sessionData.session.user.email, // For hashed matching
+                      fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
+                    })
                   })
-                })
-                .then(response => response.json())
-                .then(result => {
-                  console.log('CAPI registration event result:', result);
-                  if (result.success) {
-                    console.log('✅ Registration event sent successfully to Meta');
-                  } else {
-                    console.error('❌ Failed to send registration event:', result);
-                  }
-                })
-                .catch(err => {
-                  console.error('❌ Failed to send CAPI registration event:', err);
-                });
+                  .then(response => response.json())
+                  .then(result => {
+                    console.log('CAPI registration event result:', result);
+                    if (result.success) {
+                      console.log('✅ Registration event sent successfully to Meta');
+                    } else {
+                      console.error('❌ Failed to send registration event:', result);
+                    }
+                  })
+                  .catch(err => {
+                    console.error('❌ Failed to send CAPI registration event:', err);
+                  });
+                } else {
+                  console.log('Existing user login detected - no registration event sent');
+                  // Clear the signup attempt flag anyway
+                  localStorage.removeItem('meta_signup_attempt');
+                }
               }
               
               setIsProcessing(false);
@@ -176,32 +195,51 @@ export default function AuthCallback() {
                 // NEW: Check for signup attempt and send registration event
                 const isSignupAttempt = localStorage.getItem('meta_signup_attempt') === 'true';
                 if (isSignupAttempt && sessionData.session.user.app_metadata?.provider === 'facebook') {
-                  console.log('Signup attempt detected in fallback flow - sending CAPI registration event');
+                  // Additional check: ensure this is actually a new user registration
+                  const createdAt = new Date(sessionData.session.user.created_at);
+                  const now = new Date();
+                  const timeDiff = now - createdAt;
+                  const isNewUser = timeDiff < 300000; // Within 5 minutes
                   
-                  // Clear the signup attempt flag
-                  localStorage.removeItem('meta_signup_attempt');
+                  console.log('=== REGISTRATION CHECK (Fallback Flow) ===');
+                  console.log('User created at:', sessionData.session.user.created_at);
+                  console.log('Current time:', now.toISOString());
+                  console.log('Time difference (ms):', timeDiff);
+                  console.log('Is new user?', isNewUser);
+                  console.log('Is signup attempt?', isSignupAttempt);
                   
-                  fetch('/api/send-conversion-event', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      eventName: 'CompleteRegistration',
-                      email: sessionData.session.user.email, // For hashed matching
-                      fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
+                  if (isNewUser) {
+                    console.log('New user registration confirmed - sending CAPI registration event');
+                    
+                    // Clear the signup attempt flag
+                    localStorage.removeItem('meta_signup_attempt');
+                    
+                    fetch('/api/send-conversion-event', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        eventName: 'CompleteRegistration',
+                        email: sessionData.session.user.email, // For hashed matching
+                        fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
+                      })
                     })
-                  })
-                  .then(response => response.json())
-                  .then(result => {
-                    console.log('CAPI registration event result:', result);
-                    if (result.success) {
-                      console.log('✅ Registration event sent successfully to Meta');
-                    } else {
-                      console.error('❌ Failed to send registration event:', result);
-                    }
-                  })
-                  .catch(err => {
-                    console.error('❌ Failed to send CAPI registration event:', err);
-                  });
+                    .then(response => response.json())
+                    .then(result => {
+                      console.log('CAPI registration event result:', result);
+                      if (result.success) {
+                        console.log('✅ Registration event sent successfully to Meta');
+                      } else {
+                        console.error('❌ Failed to send registration event:', result);
+                      }
+                    })
+                    .catch(err => {
+                      console.error('❌ Failed to send CAPI registration event:', err);
+                    });
+                  } else {
+                    console.log('Existing user login detected - no registration event sent');
+                    // Clear the signup attempt flag anyway
+                    localStorage.removeItem('meta_signup_attempt');
+                  }
                 }
                 
                 setIsProcessing(false);
