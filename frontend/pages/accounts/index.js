@@ -165,6 +165,37 @@ const AccountsPage = () => {
       setSuccessMessage('Meta account connected successfully!');
       await fetchAdAccounts();
       
+      // NEW: Send registration event to Meta CAPI if this was a signup attempt
+      const isSignupAttempt = localStorage.getItem('meta_signup_attempt') === 'true';
+      if (isSignupAttempt) {
+        log('Signup attempt detected - sending CAPI registration event');
+        
+        // Clear the signup attempt flag
+        localStorage.removeItem('meta_signup_attempt');
+        
+        fetch('/api/send-conversion-event', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            eventName: 'CompleteRegistration',
+            email: session.user.email, // For hashed matching
+            fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
+          })
+        })
+        .then(response => response.json())
+        .then(result => {
+          log('CAPI registration event result:', result);
+          if (result.success) {
+            log('✅ Registration event sent successfully to Meta');
+          } else {
+            log('❌ Failed to send registration event:', result);
+          }
+        })
+        .catch(err => {
+          log('❌ Failed to send CAPI registration event:', err);
+        });
+      }
+      
       // Clear success message after 5 seconds
       setTimeout(() => setSuccessMessage(null), 5000);
 
