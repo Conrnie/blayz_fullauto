@@ -193,16 +193,39 @@ export default function AuthCallback() {
           if (data.session.user.app_metadata?.provider === 'facebook') {
             const createdAt = new Date(data.session.user.created_at);
             const now = new Date();
-            if (now - createdAt < 60000) { // Within 1 minute - assume new registration
+            const timeDiff = now - createdAt;
+            
+            console.log('=== REGISTRATION CHECK ===');
+            console.log('User created at:', data.session.user.created_at);
+            console.log('Current time:', now.toISOString());
+            console.log('Time difference (ms):', timeDiff);
+            console.log('Is within 5 minutes?', timeDiff < 300000);
+            
+            if (timeDiff < 300000) { // Within 5 minutes - assume new registration
               console.log('New Meta registration detected - sending CAPI event');
               fetch('/api/send-conversion-event', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   eventName: 'CompleteRegistration',
-                  email: data.session.user.email // For hashed matching (optional)
+                  email: data.session.user.email, // For hashed matching (optional)
+                  fbclid: localStorage.getItem('meta_fbclid') // Use stored fbclid for attribution
                 })
-              }).catch(err => console.error('Failed to send CAPI event:', err));
+              })
+              .then(response => response.json())
+              .then(result => {
+                console.log('CAPI registration event result:', result);
+                if (result.success) {
+                  console.log('✅ Registration event sent successfully to Meta');
+                } else {
+                  console.error('❌ Failed to send registration event:', result);
+                }
+              })
+              .catch(err => {
+                console.error('❌ Failed to send CAPI registration event:', err);
+              });
+            } else {
+              console.log('User is logging in (not registering) - no CAPI event sent');
             }
           }
           

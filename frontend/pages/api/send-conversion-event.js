@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'CAPI not configured' });
   }
 
-  const { eventName, email } = req.body;
+  const { eventName, email, fbclid } = req.body;
   console.log(`Sending CAPI event: ${eventName}`); // NEW: Debug log
 
   const ip = req.headers['x-forwarded-for']?.split(',')[0] || req.connection.remoteAddress;
@@ -39,6 +39,14 @@ export default async function handler(req, res) {
   // Add hashed email if provided (for better event matching)
   if (email) {
     payload.data[0].user_data.em = hashData(email);
+  }
+
+  // Add Facebook Click ID (fbc) if provided
+  if (fbclid) {
+    // Format: fb.1.{timestamp}.{fbclid}
+    const fbc = `fb.1.${eventTime}.${fbclid}`;
+    payload.data[0].user_data.fbc = fbc;
+    console.log('Added fbc to payload:', fbc);
   }
 
   try {

@@ -93,12 +93,21 @@ export default function LandingPage() {
       }
     });
 
+    // Capture fbclid from URL for Meta attribution
+    const fbclid = router.query.fbclid;
+    if (fbclid) {
+      console.log('Facebook Click ID detected:', fbclid);
+      // Store fbclid for later use in registration events
+      localStorage.setItem('meta_fbclid', fbclid);
+    }
+    
     console.log('Sending PageView to CAPI');
     fetch('/api/send-conversion-event', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        eventName: 'PageView'
+        eventName: 'PageView',
+        fbclid: fbclid || localStorage.getItem('meta_fbclid') // Use current or stored fbclid
       })
     }).catch(err => console.error('Failed to send PageView:', err));
 
