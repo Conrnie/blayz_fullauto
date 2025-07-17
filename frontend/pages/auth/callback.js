@@ -29,12 +29,20 @@ export default function AuthCallback() {
         const code = urlParams.get('code');
         const state = urlParams.get('state');
         
+        // Debug: Log all URL parameters
+        console.log('=== URL DEBUGGING ===');
+        console.log('Full URL:', window.location.href);
+        console.log('Search params:', window.location.search);
+        console.log('Hash:', window.location.hash);
+        console.log('All URL params:', Object.fromEntries(urlParams));
+        
         // ALSO check for provider token in URL fragment (for Facebook OAuth)
         let providerToken = null;
         let hasImplicitFlowTokens = false;
         const hash = window.location.hash.substring(1);
         if (hash) {
           const hashParams = new URLSearchParams(hash);
+          console.log('Hash params:', Object.fromEntries(hashParams));
           providerToken = hashParams.get('provider_token');
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
