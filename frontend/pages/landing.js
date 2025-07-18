@@ -101,15 +101,41 @@ export default function LandingPage() {
       localStorage.setItem('meta_fbclid', fbclid);
     }
     
-    console.log('Sending PageView to CAPI');
-    fetch('/api/send-conversion-event', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        eventName: 'PageView',
-        fbclid: fbclid || localStorage.getItem('meta_fbclid') // Use current or stored fbclid
+    // Only send PageView if user came from Meta ads OR we have stored fbclid
+    const storedFbclid = localStorage.getItem('meta_fbclid');
+    const hasMetaAttribution = fbclid || storedFbclid;
+    
+    // Check if we already sent a PageView in this session to avoid duplicates
+    const pageViewSent = sessionStorage.getItem('pageview_sent');
+    
+    if (hasMetaAttribution && !pageViewSent) {
+      console.log('Sending PageView to CAPI (Meta attribution detected)');
+      
+      // Mark that we've sent a PageView in this session
+      sessionStorage.setItem('pageview_sent', 'true');
+      
+      fetch('/api/send-conversion-event', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          eventName: 'PageView',
+          fbclid: fbclid || storedFbclid // Use current or stored fbclid
+        })
       })
-    }).catch(err => console.error('Failed to send PageView:', err));
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          console.log('✅ PageView event sent successfully to Meta');
+        } else {
+          console.error('❌ Failed to send PageView event:', result);
+        }
+      })
+      .catch(err => console.error('❌ Failed to send PageView:', err));
+    } else if (!hasMetaAttribution) {
+      console.log('No Meta attribution detected - PageView not sent');
+    } else if (pageViewSent) {
+      console.log('PageView already sent in this session - skipping duplicate');
+    }
 
   }, []);
 
