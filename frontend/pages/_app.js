@@ -144,10 +144,35 @@ function MyApp({ Component, pageProps, emotionCache = clientSideEmotionCache }) 
             <ThemeProvider theme={theme}>
                 <CssBaseline />
                 <Head>
-                    <title>Blayz - AI-Powered Ad Performance Analysis</title>
-                    <meta name="description" content="Optimize your ad campaigns with Blayz's AI-powered performance analysis and actionable insights." />
+                    <title>Blayz - AI-Powered Meta Ads Performance Analysis</title>
+                    <meta name="description" content="Stop wasting 30% of your Meta ad budget. Get AI-powered analysis, instant diagnostics, and actionable insights for your Facebook & Instagram campaigns." />
+                    <meta name="keywords" content="Meta ads optimization, Facebook ads AI, Instagram ads analysis, campaign performance, ad spend optimization, ROI improvement" />
+                    <meta name="author" content="Blayz" />
                     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+                    <meta name="robots" content="index, follow" />
+                    <meta name="language" content="English" />
+                    
+                    {/* Open Graph defaults */}
+                    <meta property="og:site_name" content="Blayz" />
+                    <meta property="og:type" content="website" />
+                    <meta property="og:locale" content="en_US" />
+                    
+                    {/* Twitter defaults */}
+                    <meta name="twitter:card" content="summary_large_image" />
+                    <meta name="twitter:site" content="@blayz" />
+                    
+                    {/* Favicons and Icons */}
                     <link rel="icon" href="/favicon.ico" />
+                    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+                    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+                    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+                    <link rel="manifest" href="/site.webmanifest" />
+                    <meta name="theme-color" content="#FE8401" />
+                    
+                    {/* DNS Prefetch for performance */}
+                    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+                    <link rel="dns-prefetch" href="//www.google-analytics.com" />
+                    
                     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
                 </Head>
                 {applyLayout ? (

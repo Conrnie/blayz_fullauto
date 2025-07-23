@@ -142,8 +142,56 @@ export default function LandingPage() {
   return (
     <>
       <Head>
-        <title>Blayz - Meta Ads Analysis Made Simple</title>
-        <meta name="description" content="Stop drowning in spreadsheets. Get automated analysis, instant diagnostics, and clear action steps for your Meta campaigns." />
+        <title>Stop Throwing Away 30% of Your Meta Ad Budget | Blayz AI Analysis</title>
+        <meta name="description" content="Our AI analysis tells you exactly what's draining your Meta ad spend in 60 seconds. Stop wasting budget on Zuckerberg - get actionable insights now." />
+        <meta name="keywords" content="Meta ads analysis, Facebook ads optimization, AI campaign analysis, ad spend optimization, Meta advertising ROI, Facebook marketing insights" />
+        <meta name="author" content="Blayz" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="canonical" href="https://www.blayz.io/landing" />
+        
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.blayz.io/landing" />
+        <meta property="og:title" content="Stop Throwing Away 30% of Your Meta Ad Budget | Blayz AI Analysis" />
+        <meta property="og:description" content="Our AI analysis tells you exactly what's draining your Meta ad spend in 60 seconds. Stop wasting budget on Zuckerberg - get actionable insights now." />
+        <meta property="og:image" content="https://www.blayz.io/images/blayz-meta-preview.png" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:site_name" content="Blayz" />
+        
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://www.blayz.io/landing" />
+        <meta property="twitter:title" content="Stop Throwing Away 30% of Your Meta Ad Budget | Blayz AI Analysis" />
+        <meta property="twitter:description" content="Our AI analysis tells you exactly what's draining your Meta ad spend in 60 seconds. Stop wasting budget on Zuckerberg - get actionable insights now." />
+        <meta property="twitter:image" content="https://www.blayz.io/images/blayz-meta-preview.png" />
+        
+        {/* Additional SEO */}
+        <meta name="robots" content="index, follow" />
+        <meta name="language" content="English" />
+        <meta name="revisit-after" content="7 days" />
+        <meta name="distribution" content="global" />
+        <meta name="rating" content="general" />
+        
+        {/* Structured Data */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Blayz",
+            "description": "AI-powered Meta ads analysis and optimization platform",
+            "url": "https://www.blayz.io",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "Free Beta Access"
+            }
+          })}
+        </script>
+        
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />

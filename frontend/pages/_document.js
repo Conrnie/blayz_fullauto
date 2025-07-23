@@ -8,6 +8,10 @@ export default class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
+          {/* SEO Meta Tags */}
+          <meta charSet="utf-8" />
+          <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+          
           {/* Google tag (gtag.js) - External Script */}
           <script async src="https://www.googletagmanager.com/gtag/js?id=G-VN7PQT72V7"></script>
           {/* Google tag (gtag.js) - Inline Script */}
@@ -21,6 +25,31 @@ export default class MyDocument extends Document {
               `,
             }}
           />
+          
+          {/* Structured Data for Organization */}
+          <script 
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                "name": "Blayz",
+                "url": "https://www.blayz.io",
+                "logo": "https://www.blayz.io/images/svg_logo_blayz.svg",
+                "description": "AI-powered Meta ads analysis and optimization platform",
+                "sameAs": [],
+                "contactPoint": {
+                  "@type": "ContactPoint",
+                  "contactType": "customer service",
+                  "availableLanguage": "English"
+                }
+              })
+            }}
+          />
+          
+          {/* Preload critical resources */}
+          <link rel="preload" href="/images/svg_logo_blayz.svg" as="image" />
+          
           {/* Emotion insertion point */}
           {this.props.emotionStyleTags}
         </Head>
