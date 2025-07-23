@@ -404,11 +404,11 @@ export default function LandingPage() {
                 </span>
               </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-8 text-gray-900">
-                Are Your Meta Ads a<br />
-                Black Box of <span className="italic text-gradient">WTF</span>?
+                Stop Throwing Away 30% of Your<br />
+                Meta Ad Budget to <span className="text-primary italic">Zuckerberg</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto mb-12 leading-relaxed">
-                Get the insider insights your competitors don't have. Our AI analysis reveals hidden campaign issues and opportunities that basic dashboards miss completely.
+                Our AI analysis tells you exactly what's draining your spend in 60 seconds.
               </p>
               <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-8">
                 <button 
