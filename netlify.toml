@@ -4,8 +4,10 @@
   publish = ".next"
 
 [build.environment]
+  NODE_VERSION = "20.11.1"
+  NPM_FLAGS = "--no-audit --no-fund"
   # Configure Netlify secrets scanning to ignore known public env keys embedded in the client bundle.
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_API_URL,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_BACKEND_URL,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_API_URL,NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_BACKEND_URL,NEXT_PUBLIC_BACKEND_API_URL,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,FRONTEND_URL"
   # Ignore build-cache files where Next.js embeds public env values
   SECRETS_SCAN_OMIT_PATHS = ".netlify/.next/cache/webpack/**,.netlify/.next/cache/**"
   # Move ALL real secret values (Supabase keys, API tokens, JWT, app secrets, etc.)
