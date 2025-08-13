@@ -16,10 +16,12 @@
 /frontend/build
 
 # Environment files
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env
+.env.*
+frontend/.env
+frontend/.env.*
+backend/.env
+backend/.env.*
 
 # Debug
 npm-debug.log*
