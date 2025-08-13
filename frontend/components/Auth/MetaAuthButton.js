@@ -20,6 +20,24 @@ const MetaAuthButton = ({ onSuccess, onError, className = '' }) => {
         if (window.location.pathname === '/auth/signup') {
           localStorage.setItem('meta_signup_attempt', 'true');
         }
+
+        // Fire signup tracking ONLY when user clicks Continue with Meta
+        try {
+          const leadId = localStorage.getItem('lead_id');
+          if (leadId) {
+            await fetch('/api/track-landing', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              keepalive: true,
+              body: JSON.stringify({
+                event: 'form_submit',
+                lead_id: leadId,
+                timestamp: new Date().toISOString(),
+                trigger: 'continue_with_meta'
+              })
+            }).catch(() => {});
+          }
+        } catch (e) {}
       }
       
       const { data, error } = await signInWithProvider('facebook', {

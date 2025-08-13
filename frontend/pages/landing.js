@@ -26,6 +26,67 @@ export default function LandingPage() {
       }
     }
     
+    // Lead tracking: capture lead_id or base64 `l` from URL and send page-visit to webhook
+    try {
+      const n8nEndpoint = '/api/track-landing';
+
+      const getLeadId = () => {
+        try {
+          const params = new URLSearchParams(window.location.search);
+          const id = params.get('lead_id');
+          if (id) return id;
+          const l = params.get('l');
+          if (l) {
+            // Accept plain numeric ID directly; otherwise try base64, fallback to raw
+            if (/^\d+$/.test(l)) return l;
+            try { return atob(decodeURIComponent(l)); } catch (e) { return l; }
+          }
+          return null;
+        } catch (e) { return null; }
+      };
+
+      const postEvent = (eventName, extra) => {
+        const storedLeadId = localStorage.getItem('lead_id');
+        if (!storedLeadId) return;
+        const payload = {
+          event: eventName,
+          lead_id: storedLeadId,
+          url: window.location.href,
+          referrer: document.referrer || null,
+          ua: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+        };
+        if (extra && typeof extra === 'object') {
+          Object.keys(extra).forEach(k => { payload[k] = extra[k]; });
+        }
+        try {
+          console.log('[tracking] posting', payload);
+          fetch(n8nEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+            body: JSON.stringify(payload)
+          }).then(r => {
+            console.log('[tracking] response status', r.status);
+          }).catch((err) => {
+            console.warn('[tracking] post failed', err);
+          });
+        } catch (e) {}
+      };
+
+      const leadId = getLeadId();
+      if (leadId) {
+        localStorage.setItem('lead_id', leadId);
+      }
+      const force = new URLSearchParams(window.location.search).get('force') === '1';
+      if (localStorage.getItem('lead_id') && (!sessionStorage.getItem('lp_visit_fired') || force)) {
+        postEvent('visited_landingpage');
+        sessionStorage.setItem('lp_visit_fired', '1');
+      }
+
+      // Remove generic signup click tracking: only the Continue with Meta button triggers signup
+    } catch (e) {}
+    
     // Initialize animations and other interactive elements
     const animatedElements = document.querySelectorAll('.fade-in-element');
     
