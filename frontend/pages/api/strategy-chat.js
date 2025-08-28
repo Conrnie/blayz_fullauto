@@ -1,4 +1,4 @@
-import { supabase } from '../../lib/supabaseClient';
+// Mock implementation for demo mode
 
 // AI Strategy Extraction Prompts
 const STRATEGY_ANALYSIS_PROMPT = `You are an expert Meta ads strategist helping to extract and understand a marketer's campaign approach.
@@ -38,16 +38,8 @@ export default async function handler(req, res) {
   try {
     const { session_id, message, conversation_history } = req.body;
 
-    // Get current session
-    const { data: session, error: sessionError } = await supabase
-      .from('strategy_chat_sessions')
-      .select('*')
-      .eq('id', session_id)
-      .single();
-
-    if (sessionError) {
-      return res.status(400).json({ error: 'Session not found' });
-    }
+    // For demo mode, skip database operations
+    console.log('Demo: Processing message for session:', session_id);
 
     // Analyze the conversation to determine next step
     const conversationText = conversation_history

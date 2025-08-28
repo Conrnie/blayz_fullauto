@@ -1,12 +1,19 @@
 import React, { useState } from 'react';
 import Layout from '../components/Layout/Layout';
 import StrategySetupChat from '../components/StrategySetupChat';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 import { useRouter } from 'next/router';
 
+// Demo user for testing
+const DEMO_USER = {
+  id: 'demo-user-123',
+  email: 'demo@blayz.com',
+  access_token: 'demo-token'
+};
+
 export default function StrategySetup() {
-  const { user, isLoading: authLoading } = useAuth();
+  // Use demo user for now to test the interface
+  const user = DEMO_USER;
+  const authLoading = false;
   const [isCompleting, setIsCompleting] = useState(false);
   const router = useRouter();
 
@@ -14,27 +21,20 @@ export default function StrategySetup() {
     setIsCompleting(true);
     
     try {
-      // Save the completed strategy
-      const { data: strategy, error } = await supabase
-        .from('marketer_strategies')
-        .insert({
-          user_id: user.id,
-          strategy_name: `${user.email?.split('@')[0]}'s Strategy`,
-          preferences: finalStrategy.preferences,
-          is_default: true
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Redirect to campaign creation or dashboard
-      router.push('/dashboard?strategy_complete=true');
+      // For demo mode, simulate saving the strategy
+      console.log('Demo: Saving strategy:', finalStrategy);
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      alert(`✅ Strategy saved successfully!\n\nStrategy: ${finalStrategy.summary || 'Custom strategy created'}\n\nIn a real environment, this would save to your database and create automation rules.`);
+      
+      // For demo, just show success instead of redirect
+      setIsCompleting(false);
       
     } catch (error) {
       console.error('Error saving strategy:', error);
       alert('Error saving strategy. Please try again.');
-    } finally {
       setIsCompleting(false);
     }
   };

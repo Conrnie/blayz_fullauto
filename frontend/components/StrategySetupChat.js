@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+
+// Demo user for testing
+const DEMO_USER = {
+  id: 'demo-user-123',
+  email: 'demo@blayz.com',
+  access_token: 'demo-token'
+};
 
 const StrategySetupChat = ({ onStrategyComplete }) => {
-  const { user } = useAuth();
+  const user = DEMO_USER;
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -25,23 +30,9 @@ const StrategySetupChat = ({ onStrategyComplete }) => {
   const initializeChatSession = async () => {
     if (!user) return;
 
-    // Create new chat session
-    const { data: session, error } = await supabase
-      .from('strategy_chat_sessions')
-      .insert({
-        user_id: user.id,
-        current_step: 'discovery',
-        messages: []
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating chat session:', error);
-      return;
-    }
-
-    setSessionId(session.id);
+    // For demo mode, create a mock session
+    const mockSessionId = 'demo-session-' + Date.now();
+    setSessionId(mockSessionId);
 
     // Start with the opening message
     const openingMessage = {
@@ -98,15 +89,13 @@ Describe your ideal strategy - testing approach, what you focus on, how you scal
         const finalMessages = [...updatedMessages, assistantMessage];
         setMessages(finalMessages);
 
-        // Update session in database
-        await supabase
-          .from('strategy_chat_sessions')
-          .update({
-            messages: finalMessages,
-            current_step: result.current_step || 'discovery',
-            extracted_preferences: result.extracted_preferences || {}
-          })
-          .eq('id', sessionId);
+        // For demo mode, just log the session update
+        console.log('Demo: Updating chat session:', {
+          sessionId,
+          messages: finalMessages,
+          current_step: result.current_step || 'discovery',
+          extracted_preferences: result.extracted_preferences || {}
+        });
 
         // Check if strategy is complete
         if (result.strategy_complete) {
