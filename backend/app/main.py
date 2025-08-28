@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.status import HTTP_401_UNAUTHORIZED
 import logging
 
-from app.routers import auth as auth_router, insights, trend_analysis, sync, data_status, test, company_profiles, automation, agent_testing
+from app.routers import auth as auth_router, insights, trend_analysis, sync, data_status, test, company_profiles, automation, agent_testing, creative
 # Temporarily commented out facebook import due to requests dependency issue
 # from app.routers import facebook
 from app.auth import validate_token
@@ -142,6 +142,8 @@ app.include_router(automation.router, tags=["Automation"])
 logger.info("Automation router included", extra={"event_type": "router_inclusion", "router": "automation"})
 app.include_router(agent_testing.router, prefix="/api/agent-testing", tags=["Agent Testing"])
 logger.info("Agent Testing router included with prefix /api/agent-testing", extra={"event_type": "router_inclusion", "router": "agent_testing"})
+app.include_router(creative.router, prefix="/api/creative", tags=["Creative Agent"])
+logger.info("Creative Agent router included with prefix /api/creative", extra={"event_type": "router_inclusion", "router": "creative"})
 
 @app.on_event("startup")
 async def startup_event():

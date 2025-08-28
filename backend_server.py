@@ -28,14 +28,14 @@ except ImportError as e:
 
 if __name__ == "__main__":
     print("🚀 Starting Blayz Backend Server...")
-    print("📍 Server URL: http://localhost:8001")
-    print("📚 API Docs: http://localhost:8001/docs")
+    print("📍 Server URL: http://localhost:8000")
+    print("📚 API Docs: http://localhost:8000/docs")
     
     # Use Uvicorn (ASGI server) instead of Gunicorn (WSGI server) for FastAPI
     uvicorn.run(
         "backend_server:app",
         host="0.0.0.0",
-        port=8001,  # Use port 8001 to avoid conflict with frontend on 5000
+        port=8000,  # Use port 8000 for backend API
         reload=True,
         log_level="info"
     )

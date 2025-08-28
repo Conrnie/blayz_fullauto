@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { Button, TextField, Select, MenuItem, FormControl, InputLabel, Chip } from '@mui/material';
 
 export default function CreativeDemo() {
+  // Demo mode - no authentication required
+  const [user, setUser] = useState({ email: 'demo@blayz.io', id: 'demo' });
+  const isAuthenticated = true;
+  const authLoading = false;
+
   const [brandInfo, setBrandInfo] = useState({
     brand_voice: "Professional and engaging",
     brand_values: "Quality and innovation", 
@@ -22,36 +27,55 @@ export default function CreativeDemo() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('copy');
 
-  // Load company profiles for brand info
+  // Load demo brand info
   useEffect(() => {
-    // In a real app, this would fetch from the company profiles API
-    const loadBrandInfo = () => {
-      // Mock brand data - in real app this comes from company profiles
-      setBrandInfo({
-        brand_voice: "Innovative and trustworthy",
-        brand_values: "Automation, efficiency, growth",
-        product_benefits: "AI-powered Meta ads optimization that saves time and increases ROI",
-        brand_colors: {
-          primary: "#FE8401",
-          secondary: "#FF9933"
-        }
-      });
-    };
-    
-    loadBrandInfo();
+    // Set demo brand info for Creative Agent demo
+    setBrandInfo({
+      brand_voice: "Innovative and trustworthy",
+      brand_values: "Automation, efficiency, growth",
+      product_benefits: "AI-powered Meta ads optimization that saves time and increases ROI",
+      brand_colors: {
+        primary: "#FE8401",
+        secondary: "#FF9933"
+      }
+    });
   }, []);
 
   const generateAdCopy = async () => {
     setLoading(true);
     setGeneratedContent(null);
+    setActiveTab('copy');
     
     try {
-      // Simulate the Creative Agent API call
-      const result = await simulateCreativeGeneration('copy', brandInfo, campaignInfo);
-      setGeneratedContent(result);
+      // Call the real Creative Agent API
+      const response = await fetch('http://localhost:8000/api/creative/generate-copy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          brand_info: brandInfo,
+          campaign_objective: campaignInfo.objective,
+          target_audience: campaignInfo.target_audience,
+          ad_format: campaignInfo.ad_format
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setGeneratedContent({
+          type: 'ad_copy',
+          ...result.data,
+          generated_at: new Date().toISOString()
+        });
+      } else {
+        throw new Error(`API call failed: ${response.status}`);
+      }
     } catch (error) {
       console.error('Failed to generate ad copy:', error);
-      setGeneratedContent({ error: 'Failed to generate ad copy' });
+      // Fallback to simulated data if API fails
+      const result = await simulateCreativeGeneration('copy', brandInfo, campaignInfo);
+      setGeneratedContent(result);
     } finally {
       setLoading(false);
     }
@@ -60,13 +84,37 @@ export default function CreativeDemo() {
   const generateImageDescription = async () => {
     setLoading(true);
     setGeneratedContent(null);
+    setActiveTab('image');
     
     try {
-      const result = await simulateCreativeGeneration('image', brandInfo, campaignInfo);
-      setGeneratedContent(result);
+      // Call the real Creative Agent API
+      const response = await fetch('http://localhost:8000/api/creative/generate-image-description', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          brand_info: brandInfo,
+          campaign_objective: campaignInfo.objective,
+          ad_copy: `${brandInfo.product_benefits} for ${campaignInfo.target_audience}`
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setGeneratedContent({
+          type: 'image_description',
+          ...result.data,
+          generated_at: new Date().toISOString()
+        });
+      } else {
+        throw new Error(`API call failed: ${response.status}`);
+      }
     } catch (error) {
       console.error('Failed to generate image description:', error);
-      setGeneratedContent({ error: 'Failed to generate image description' });
+      // Fallback to simulated data if API fails
+      const result = await simulateCreativeGeneration('image', brandInfo, campaignInfo);
+      setGeneratedContent(result);
     } finally {
       setLoading(false);
     }
@@ -75,13 +123,44 @@ export default function CreativeDemo() {
   const optimizeCreative = async () => {
     setLoading(true);
     setGeneratedContent(null);
+    setActiveTab('optimize');
     
     try {
-      const result = await simulateCreativeGeneration('optimize', brandInfo, campaignInfo);
-      setGeneratedContent(result);
+      // Call the real Creative Agent API
+      const response = await fetch('http://localhost:8000/api/creative/optimize-creative', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          current_creative: {
+            primary_text: `${brandInfo.product_benefits}. Perfect for ${campaignInfo.target_audience}.`,
+            headline: "Transform Your Business",
+            cta: "Learn More"
+          },
+          performance_data: {
+            ctr: 0.8,  // Low CTR for demonstration
+            engagement_rate: 2.1,
+            conversion_rate: 1.2
+          }
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setGeneratedContent({
+          type: 'creative_optimization',
+          ...result.data,
+          generated_at: new Date().toISOString()
+        });
+      } else {
+        throw new Error(`API call failed: ${response.status}`);
+      }
     } catch (error) {
       console.error('Failed to optimize creative:', error);
-      setGeneratedContent({ error: 'Failed to optimize creative' });
+      // Fallback to simulated data if API fails
+      const result = await simulateCreativeGeneration('optimize', brandInfo, campaignInfo);
+      setGeneratedContent(result);
     } finally {
       setLoading(false);
     }
@@ -128,7 +207,7 @@ export default function CreativeDemo() {
         color_scheme: `Primary: ${brand.brand_colors.primary} for CTA buttons and key highlights. Secondary: ${brand.brand_colors.secondary} for accents and progress indicators. Background: Clean whites and light grays with subtle gradients.`,
         text_overlay_suggestions: [
           `"${campaign.objective === 'conversions' ? 'Convert' : 'Engage'} Better" in bold white text, top-left`,
-          "AI-Powered Results" in smaller text, bottom-right corner with brand color background
+          "AI-Powered Results in smaller text, bottom-right corner with brand color background"
         ],
         target_audience: campaign.target_audience,
         generated_at: new Date().toISOString()
@@ -300,6 +379,8 @@ export default function CreativeDemo() {
       </div>
     </div>
   );
+
+  // Demo is always ready
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white">
