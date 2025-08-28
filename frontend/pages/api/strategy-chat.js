@@ -11,13 +11,14 @@ LEAD GEN OPTIMIZATION AREAS TO COVER (ask 1-2 questions per area max):
 
 1. CREATIVE INTELLIGENCE FOR LEAD GEN
 - What CTR threshold triggers new ad creative generation? (e.g., "Generate new ad creatives when CTR drops below 1.5%")
-- Lead capture method: Are you using Meta lead forms or sending traffic to landing pages? 
-- Optimization triggers: For forms - test new headlines when completion rate drops? For landing pages - test new pages when conversion rate drops?
+- Lead capture method: Are you using Meta lead forms or driving traffic to their landing pages?
+- For Meta lead forms: Test new form headlines/fields when completion rate drops below what %?
+- Creative refresh: How often should winning ad creatives be refreshed to prevent fatigue?
 
 2. LEAD GEN SCALING & KILL CRITERIA
 - Cost Per Lead (CPL) scaling trigger: (e.g., "Scale when CPL is under $25 after 50 leads")
 - Kill criteria for lead campaigns: (e.g., "Pause campaigns when CPL exceeds $50 after 100 leads")
-- Landing page performance: If using landing pages, what conversion rate triggers optimization?
+- Minimum lead volume before making scaling decisions: (e.g., "Wait for 25 leads before scaling")
 
 3. LEAD GEN TARGETING OPTIMIZATION  
 - Lead quality audience expansion: (e.g., "Expand to similar audiences when getting qualified leads")
@@ -41,10 +42,10 @@ RESPONSE FORMAT (JSON):
     // Only include lead gen optimization rules they've specified
     "lead_creative_intelligence": {
       "ctr_threshold": "CTR threshold for new ad creative generation",
-      "lead_capture_method": "Meta lead forms or landing pages",
-      "form_completion_threshold": "Form completion rate that triggers form optimization", 
-      "landing_page_conversion_threshold": "Landing page conversion rate that triggers page optimization",
-      "lead_magnet_testing": "When to test new lead magnets/headlines"
+      "lead_capture_method": "Meta lead forms or client landing pages",
+      "form_completion_threshold": "Form completion rate that triggers Meta form optimization", 
+      "creative_refresh_schedule": "How often to refresh winning ad creatives",
+      "lead_magnet_testing": "When to test new lead magnets/form headlines"
     },
     "lead_scaling_optimization": {
       "cpl_scaling_trigger": "Cost Per Lead threshold for scaling up",
@@ -74,11 +75,11 @@ When lead gen optimization rules are complete (after 4-6 exchanges):
   "response": "Perfect! Your lead generation optimization assistant is ready. I'll now monitor your lead campaigns and automatically: [list their specific lead gen rules]. Ready to connect your Meta lead generation campaigns?",
   "optimization_rules_complete": true,
   "final_lead_automation": {
-    "lead_creative_rules": ["Generate new ad creatives when CTR < X%", "Test new lead forms/landing pages when conversion < X%"],
+    "lead_creative_rules": ["Generate new ad creatives when CTR < X%", "Test new Meta lead forms when completion < X%", "Refresh winning creatives every X days"],
     "lead_scaling_rules": ["Scale when CPL < $X after X leads", "Pause when CPL > $X after X leads"], 
     "lead_targeting_rules": ["Expand to similar audiences with quality leads", "Focus on high-intent lead behaviors"],
     "lead_insight_rules": ["Optimize for CPL under $X", "Alert when lead volume drops X%"],
-    "lead_capture_optimization": ["Auto-optimize lead forms OR landing pages based on performance"]
+    "meta_lead_optimization": ["Auto-optimize Meta lead forms based on completion rates", "Monitor landing page performance for campaign optimization (not page changes)"]
   }
 }`;
 
