@@ -39,22 +39,22 @@ const AutomationRobot = ({ currentStep, setupData }) => {
   const { message, tip } = getRobotMessage();
   
   return (
-    <div className="bg-slate-800 rounded-xl p-6 sticky top-8">
+    <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-6 sticky top-8 shadow-xl border border-white/10">
       {/* Robot Avatar */}
       <div className="flex justify-center mb-6">
         <div className="relative">
-          <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
+          <div className="w-20 h-20 bg-gradient-to-br from-[#FE8401] to-[#FF9933] rounded-full flex items-center justify-center">
             <div className="text-white text-3xl">🤖</div>
           </div>
           {/* Animated pulse */}
-          <div className="absolute inset-0 w-20 h-20 bg-purple-500/20 rounded-full animate-ping"></div>
+          <div className="absolute inset-0 w-20 h-20 bg-[#FE8401]/20 rounded-full animate-ping"></div>
         </div>
       </div>
       
       {/* Robot Name */}
       <div className="text-center mb-6">
         <h3 className="text-xl font-bold text-white">Blayz Assistant</h3>
-        <p className="text-purple-400 text-sm">Your AI Campaign Manager</p>
+        <p className="text-[#FE8401] text-sm font-medium">Your AI Campaign Manager</p>
       </div>
       
       {/* Message Bubble */}
@@ -66,10 +66,10 @@ const AutomationRobot = ({ currentStep, setupData }) => {
       </div>
       
       {/* Tip */}
-      <div className="bg-purple-900/20 border border-purple-600/30 rounded-lg p-3 mb-6">
+      <div className="bg-[#FE8401]/10 border border-[#FE8401]/30 rounded-lg p-3 mb-6">
         <div className="flex items-start space-x-2">
-          <div className="text-purple-400 mt-0.5">💡</div>
-          <p className="text-purple-300 text-xs leading-relaxed">
+          <div className="text-[#FE8401] mt-0.5">💡</div>
+          <p className="text-white/90 text-xs leading-relaxed">
             {tip}
           </p>
         </div>

@@ -87,8 +87,8 @@ export default function AutomationSetup() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-        <div className="container mx-auto px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#FE8401] via-[#FF9933] to-[#FFBB66]">
+        <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-white mb-4">
@@ -110,8 +110,8 @@ export default function AutomationSetup() {
                   <div className={`
                     w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
                     ${currentStep >= step.id 
-                      ? 'bg-purple-600 text-white' 
-                      : 'bg-slate-700 text-slate-400'
+                      ? 'bg-[#FE8401] text-white shadow-lg' 
+                      : 'bg-white/30 text-white/70'
                     }
                   `}>
                     {step.id}
@@ -125,7 +125,7 @@ export default function AutomationSetup() {
                   </div>
                   {index < steps.length - 1 && (
                     <div className={`flex-1 h-0.5 mx-4 ${
-                      currentStep > step.id ? 'bg-purple-600' : 'bg-slate-700'
+                      currentStep > step.id ? 'bg-[#FE8401]' : 'bg-white/30'
                     }`} />
                   )}
                 </div>
@@ -134,9 +134,9 @@ export default function AutomationSetup() {
           </div>
 
           {/* Main Content */}
-          <div className="flex gap-8">
+          <div className="flex gap-8 justify-center">
             {/* Robot Assistant */}
-            <div className="w-80">
+            <div className="w-80 flex-shrink-0">
               <AutomationRobot 
                 currentStep={currentStep}
                 setupData={setupData}
@@ -144,25 +144,25 @@ export default function AutomationSetup() {
             </div>
 
             {/* Step Content */}
-            <div className="flex-1">
-              <div className="bg-slate-800 rounded-xl p-8">
+            <div className="flex-1 max-w-4xl">
+              <div className="bg-white/95 backdrop-blur-sm rounded-xl p-8 shadow-xl">
                 {renderCurrentStep()}
                 
                 {/* Navigation */}
-                <div className="flex justify-between mt-8 pt-6 border-t border-slate-700">
+                <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
                   <button
                     onClick={handleBack}
                     disabled={currentStep === 1}
                     className={`px-6 py-2 rounded-lg font-medium ${
                       currentStep === 1
-                        ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                        : 'bg-slate-700 text-white hover:bg-slate-600'
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
                     Back
                   </button>
                   
-                  <div className="text-slate-400">
+                  <div className="text-gray-500">
                     Step {currentStep} of {steps.length}
                   </div>
                 </div>
