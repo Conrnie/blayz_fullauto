@@ -6,9 +6,11 @@ requires-python = ">=3.11"
 dependencies = [
     "aiofiles>=24.1.0",
     "alembic>=1.16.2",
+    "anthropic>=0.64.0",
     "asyncpg>=0.30.0",
     "email-validator>=2.3.0",
     "fastapi>=0.115.14",
+    "flask-dance>=7.1.0",
     "flask>=3.1.0",
     "flask-login>=0.6.3",
     "flask-sqlalchemy>=3.1.1",
@@ -27,4 +29,6 @@ dependencies = [
     "sqlalchemy>=2.0.41",
     "supabase>=2.16.0",
     "uvicorn>=0.35.0",
+    "oauthlib>=3.3.1",
+    "pyjwt>=2.10.1",
 ]

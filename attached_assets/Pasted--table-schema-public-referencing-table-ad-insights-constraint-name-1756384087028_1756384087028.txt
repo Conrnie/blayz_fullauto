@@ -1,0 +1,218 @@
+[
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_insights",
+    "constraint_name": "fk_ad_insights_ad_account",
+    "referencing_column": "ad_account_id",
+    "referenced_table": "ad_accounts",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_insights_country",
+    "constraint_name": "ad_insights_country_ad_id_fkey",
+    "referencing_column": "ad_id",
+    "referenced_table": "ads",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_insights_demographics",
+    "constraint_name": "ad_insights_demographics_ad_id_fkey",
+    "referencing_column": "ad_id",
+    "referenced_table": "ads",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_insights_device",
+    "constraint_name": "ad_insights_device_ad_id_fkey",
+    "referencing_column": "ad_id",
+    "referenced_table": "ads",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_insights_hourly",
+    "constraint_name": "ad_insights_hourly_insight_id_fkey",
+    "referencing_column": "insight_id",
+    "referenced_table": "ad_insights",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_insights_region",
+    "constraint_name": "ad_insights_region_ad_id_fkey",
+    "referencing_column": "ad_id",
+    "referenced_table": "ads",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights",
+    "constraint_name": "ad_set_insights_ad_account_id_fkey",
+    "referencing_column": "ad_account_id",
+    "referenced_table": "ad_accounts",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_country",
+    "constraint_name": "ad_set_insights_country_ad_set_id_fkey",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_country",
+    "constraint_name": "fk_ad_set_insights_country_ad_set",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_demographics",
+    "constraint_name": "ad_set_insights_demographics_ad_set_id_fkey",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_demographics",
+    "constraint_name": "fk_ad_set_insights_demographics_ad_set",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_device",
+    "constraint_name": "ad_set_insights_device_ad_set_id_fkey",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_device",
+    "constraint_name": "fk_ad_set_insights_device_ad_set",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_hourly",
+    "constraint_name": "ad_set_insights_hourly_insight_id_fkey",
+    "referencing_column": "insight_id",
+    "referenced_table": "ad_set_insights",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_region",
+    "constraint_name": "ad_set_insights_region_ad_set_id_fkey",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_set_insights_region",
+    "constraint_name": "fk_ad_set_insights_region_ad_set",
+    "referencing_column": "ad_set_id",
+    "referenced_table": "ad_sets",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ad_sets",
+    "constraint_name": "ad_sets_ad_account_id_fkey",
+    "referencing_column": "ad_account_id",
+    "referenced_table": "ad_accounts",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "ads",
+    "constraint_name": "ads_ad_account_id_fkey",
+    "referencing_column": "ad_account_id",
+    "referenced_table": "ad_accounts",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "avatar_profiles",
+    "constraint_name": "avatar_profiles_company_profile_id_fkey",
+    "referencing_column": "company_profile_id",
+    "referenced_table": "company_profiles",
+    "referenced_column": "profile_id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "campaigns",
+    "constraint_name": "fk_campaigns_ad_account_id_ref_ad_accounts_id",
+    "referencing_column": "ad_account_id",
+    "referenced_table": "ad_accounts",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "campaigns",
+    "constraint_name": "fk_campaigns_company_profile",
+    "referencing_column": "company_profile_id",
+    "referenced_table": "company_profiles",
+    "referenced_column": "profile_id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "campaigns_insights",
+    "constraint_name": "campaigns_insights_ad_account_id_fkey",
+    "referencing_column": "ad_account_id",
+    "referenced_table": "ad_accounts",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "campaigns_insights",
+    "constraint_name": "campaigns_insights_campaign_id_fkey",
+    "referencing_column": "campaign_id",
+    "referenced_table": "campaigns",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "creative_generation_requests",
+    "constraint_name": "creative_generation_requests_company_profile_id_fkey",
+    "referencing_column": "company_profile_id",
+    "referenced_table": "company_profiles",
+    "referenced_column": "profile_id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "creative_generation_results",
+    "constraint_name": "creative_generation_results_request_id_fkey",
+    "referencing_column": "request_id",
+    "referenced_table": "creative_generation_requests",
+    "referenced_column": "id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "saved_ad_creatives",
+    "constraint_name": "saved_ad_creatives_company_profile_id_fkey",
+    "referencing_column": "company_profile_id",
+    "referenced_table": "company_profiles",
+    "referenced_column": "profile_id"
+  },
+  {
+    "table_schema": "public",
+    "referencing_table": "saved_ad_creatives",
+    "constraint_name": "saved_ad_creatives_generation_result_id_fkey",
+    "referencing_column": "generation_result_id",
+    "referenced_table": "creative_generation_results",
+    "referenced_column": "id"
+  }
+]

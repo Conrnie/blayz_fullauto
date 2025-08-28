@@ -52,3 +52,6 @@ deploymentTarget = "autoscale"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[agent]
+integrations = ["python_database==1.0.0", "python_anthropic==1.0.0", "python_log_in_with_replit==1.0.0"]

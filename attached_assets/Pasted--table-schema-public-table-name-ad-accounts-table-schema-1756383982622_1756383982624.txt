@@ -1,0 +1,122 @@
+[
+  {
+    "table_schema": "public",
+    "table_name": "ad_accounts"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_insights"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_insights_country"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_insights_demographics"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_insights_device"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_insights_hourly"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_insights_region"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_landing_consistency"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_set_insights"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_set_insights_country"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_set_insights_demographics"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_set_insights_device"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_set_insights_hourly"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_set_insights_region"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ad_sets"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "ads"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "avatar_profiles"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "beta_invites"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "campaign_reports"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "campaigns"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "campaigns_insights"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "company_profiles"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "creative_generation_requests"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "creative_generation_results"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "feedback"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "meta_connections"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "saved_ad_creatives"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "security_logs"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "subscribers"
+  },
+  {
+    "table_schema": "public",
+    "table_name": "user_profiles"
+  }
+]
