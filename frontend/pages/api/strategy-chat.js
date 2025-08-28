@@ -128,14 +128,14 @@ LATEST USER MESSAGE: ${latestMessage}
 Analyze this conversation and respond appropriately to help understand their Meta ads strategy. Focus on ONE key aspect at a time and build the conversation naturally.`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-5-mini-2025-08-07", // Using the latest model as requested
+      model: "gpt-4o-mini-2024-07-18", // Using available model 
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt }
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 800
+      max_completion_tokens: 800
     });
 
     const response = JSON.parse(completion.choices[0].message.content);
