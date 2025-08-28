@@ -5,124 +5,75 @@ const openai = new OpenAI({
 });
 
 // AI Strategy Extraction Prompts
-const STRATEGY_ANALYSIS_PROMPT = `You are a Meta ads automation specialist gathering the exact details needed to build automated campaign rules. Follow this structured framework to ensure campaigns can launch without errors.
+const STRATEGY_ANALYSIS_PROMPT = `You are setting up automated optimization rules for existing Meta campaigns. Keep this conversation SHORT and focused on optimization thresholds - assume they already have campaigns running.
 
-CONVERSATION FRAMEWORK - Follow phases in order:
+OPTIMIZATION AREAS TO COVER (ask 1-2 questions per area max):
 
-PHASE 0: FOUNDATIONAL SETUP
-- Primary business goal for ads (sales, leads, traffic)
-- Meta campaign objective alignment (Sales, Leads, etc.)
-- Product/service/offer description (include catalog feeds/URLs)
-- Meta Pixel and Conversions API setup status and tracked events
-- Account limits (daily spend caps, API access)
-- Preferred ad placements (Advantage+ auto vs manual selection)
-- Bidding strategy (auto-bidding, cost cap, minimum ROAS)
+1. CREATIVE INTELLIGENCE RULES
+- What CTR threshold triggers new creative generation? (e.g., "Generate new creatives when CTR drops below 1%")
+- Creative fatigue detection: How many days before auto-refreshing? (e.g., "Refresh creatives every 7 days")
 
-PHASE 1: CREATIVE TESTING OPERATIONS
-- Number of creatives to test per campaign/ad set
-- Creative refresh triggers (time-based, performance metrics)
-- Ad copy variation rules (hooks, CTAs, personalization)
-- Advantage+ Creative usage for auto-adjustments
-- Key creative performance metrics (CTR, video completion rates)
+2. SCALING & KILL CRITERIA  
+- Performance triggers for scaling: (e.g., "Scale at 2x ROAS after $200 spend")
+- Kill criteria: (e.g., "Pause campaigns at $50 CPA after $300 spend")
 
-PHASE 2: BUDGET & SCALING OPERATIONS
-- Initial testing budget per ad set/campaign
-- Performance triggers for scaling up (ROAS, CPA thresholds)
-- Scaling method preference (budget increases vs duplication)
-- Campaign kill/pause criteria (spend and performance thresholds)
-- Learning phase wait time before scaling decisions
-- Budget allocation preference (Advantage Campaign Budget vs manual)
+3. TARGETING OPTIMIZATION
+- Audience expansion rules: (e.g., "Expand to lookalikes when converting audience reaches 1000 people")
+- When to build negative audiences: (e.g., "Exclude after 3 impressions with no click")
 
-PHASE 3: TARGETING & STRUCTURE OPERATIONS
-- Audience testing approach (broad start, lookalike testing)
-- Campaign structure preference (CBO vs ABO)
-- Geographic targeting strategy (national, specific countries, radius)
-- Audience types to include (custom, website visitors, exclusions)
-- Advantage+ Audience usage for AI expansions
-- Retargeting rules and over-targeting prevention
+4. PERFORMANCE INSIGHTS PREFERENCES
+- Primary KPI focus: (e.g., "Optimize for CPA under $30")
+- Alert preferences: (e.g., "Alert when campaigns drop 20% in performance")
 
-PHASE 4: OPTIMIZATION OPERATIONS
-- Primary KPI to optimize for (ROAS, CPA, etc.)
-- Wait time before making optimizations post-launch
-- Specific optimization actions (pause, boost, adjust)
-- Secondary metrics to track (CTR, CPC, frequency)
-- Advantage+ integration for auto-optimization
-- A/B testing setup (variants, splits, win criteria)
-- Seasonal adjustment rules
-
-CONVERSATION PRINCIPLES:
-- Ask ONE specific question from the current phase
-- Get exact numbers, thresholds, and criteria
-- Don't move to next phase until current phase is complete
-- Focus on actionable automation rules, not strategy theory
+CONVERSATION STYLE:
+- Ask ONE direct question about thresholds/criteria
+- Get specific numbers and triggers
+- Keep it conversational but efficient
+- Assume they're experienced marketers
+- Total conversation should be 4-6 exchanges max
 
 RESPONSE FORMAT (JSON):
 {
   "response": "Your focused question about campaign operations (stay in current phase until complete)",
   "extracted_preferences": {
-    // Only include details they've explicitly provided
-    "foundational_setup": {
-      "business_goal": "their stated goal",
-      "campaign_objective": "Meta objective they chose",
-      "product_description": "their product/service details",
-      "pixel_setup": "tracking setup status",
-      "account_limits": "any limits mentioned",
-      "ad_placements": "placement preferences",
-      "bidding_strategy": "bidding approach"
+    // Only include optimization rules they've specified
+    "creative_intelligence": {
+      "ctr_threshold": "CTR number that triggers new creative generation",
+      "fatigue_detection": "days/criteria for auto-refresh",
+      "creative_analysis": "what patterns to identify in winners"
     },
-    "creative_testing": {
-      "creatives_per_campaign": "exact number",
-      "refresh_triggers": "specific triggers mentioned",
-      "copy_variations": "variation rules",
-      "advantage_creative": "usage preference",
-      "performance_metrics": "specific metrics and thresholds"
+    "scaling_optimization": {
+      "scaling_triggers": "ROAS/CPA thresholds for scaling up", 
+      "kill_criteria": "spend/performance thresholds for pausing",
+      "budget_redistribution": "how to move budget from losers to winners"
     },
-    "budget_scaling": {
-      "initial_budget": "exact dollar amount",
-      "scaling_triggers": "specific ROAS/CPA thresholds",
-      "scaling_method": "budget increase % or duplication",
-      "pause_criteria": "exact spend/performance thresholds",
-      "learning_phase_wait": "time period specified",
-      "budget_allocation": "ACB or manual preference"
+    "targeting_optimization": {
+      "audience_expansion": "criteria for expanding to new audiences",
+      "negative_audiences": "when/how to build exclusion lists",
+      "performance_adjustments": "targeting tweaks based on performance"
     },
-    "targeting_structure": {
-      "audience_approach": "their testing strategy",
-      "campaign_structure": "CBO/ABO preference",
-      "geo_targeting": "geographic strategy",
-      "audience_types": "specific audience types",
-      "advantage_audience": "AI expansion preference",
-      "retargeting_rules": "specific retargeting setup"
-    },
-    "optimization": {
-      "primary_kpi": "exact KPI mentioned",
-      "optimization_wait": "hours/days before optimizing",
-      "optimization_actions": "specific actions listed",
-      "secondary_metrics": "additional metrics to track",
-      "advantage_integration": "auto-optimization preferences",
-      "ab_testing": "testing setup details",
-      "seasonal_adjustments": "seasonal rules if any"
+    "performance_insights": {
+      "primary_kpi": "main metric to optimize for",
+      "alert_preferences": "when to send performance alerts", 
+      "winner_analysis": "what insights to extract from top performers"
     }
   },
-  "current_phase": "foundational_setup|creative_testing|budget_scaling|targeting_structure|optimization",
+  "optimization_rules_complete": false,
   "phase_complete": false,
   "strategy_complete": false,
   "final_strategy": null,
   "confidence_level": 0.7
 }
 
-When ALL phases complete and you have operational details for automation:
+When optimization rules are complete (after 4-6 exchanges):
 {
-  "response": "Perfect! I have all the operational details needed. Let me show you the automation rules I'll create...",
-  "strategy_complete": true,
-  "final_strategy": {
-    "automation_rules": [
-      "Test X creatives per campaign with Y budget",
-      "Scale when CPA < $X after Y spend",
-      "Pause campaigns when CPA > $X after Y spend",
-      "Auto-refresh creatives every X days",
-      // etc - specific, actionable rules
-    ],
-    "preferences": // All extracted operational preferences
+  "response": "Perfect! Your optimization assistant is ready. I'll now monitor your campaigns and automatically: [list their specific rules]. Ready to connect your Meta campaigns?",
+  "optimization_rules_complete": true,
+  "final_automation": {
+    "creative_rules": ["Generate new creatives when CTR < X%", "Auto-refresh every X days"],
+    "scaling_rules": ["Scale at X ROAS after $X spend", "Pause at $X CPA after $X spend"], 
+    "targeting_rules": ["Expand audiences when X conversions", "Build negatives after X impressions"],
+    "insight_rules": ["Optimize for X KPI", "Alert when performance drops X%"]
   }
 }`;
 
