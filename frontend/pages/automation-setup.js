@@ -87,14 +87,14 @@ export default function AutomationSetup() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-[#FE8401] via-[#FF9933] to-[#FFBB66]">
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto px-4 py-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white mb-4">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
               Full Automation Setup
             </h1>
-            <p className="text-slate-300 text-lg">
+            <p className="text-gray-600 text-lg">
               Set up your complete Meta campaign automation in 5 easy steps
             </p>
           </div>
@@ -111,21 +111,21 @@ export default function AutomationSetup() {
                     w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold
                     ${currentStep >= step.id 
                       ? 'bg-[#FE8401] text-white shadow-lg' 
-                      : 'bg-white/30 text-white/70'
+                      : 'bg-gray-100 text-gray-500'
                     }
                   `}>
                     {step.id}
                   </div>
                   <div className="ml-3">
                     <div className={`text-sm font-medium ${
-                      currentStep >= step.id ? 'text-white' : 'text-slate-400'
+                      currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
                     }`}>
                       {step.title}
                     </div>
                   </div>
                   {index < steps.length - 1 && (
                     <div className={`flex-1 h-0.5 mx-4 ${
-                      currentStep > step.id ? 'bg-[#FE8401]' : 'bg-white/30'
+                      currentStep > step.id ? 'bg-[#FE8401]' : 'bg-gray-300'
                     }`} />
                   )}
                 </div>
@@ -134,18 +134,19 @@ export default function AutomationSetup() {
           </div>
 
           {/* Main Content */}
-          <div className="flex gap-8 justify-center">
-            {/* Robot Assistant */}
-            <div className="w-80 flex-shrink-0">
-              <AutomationRobot 
-                currentStep={currentStep}
-                setupData={setupData}
-              />
-            </div>
+          <div className="max-w-6xl mx-auto">
+            <div className="flex gap-8">
+              {/* Robot Assistant */}
+              <div className="w-80 flex-shrink-0">
+                <AutomationRobot 
+                  currentStep={currentStep}
+                  setupData={setupData}
+                />
+              </div>
 
-            {/* Step Content */}
-            <div className="flex-1 max-w-4xl">
-              <div className="bg-white/95 backdrop-blur-sm rounded-xl p-8 shadow-xl">
+              {/* Step Content */}
+              <div className="flex-1">
+                <div className="bg-white rounded-xl p-8 shadow-lg border border-gray-200">
                 {renderCurrentStep()}
                 
                 {/* Navigation */}
@@ -165,6 +166,7 @@ export default function AutomationSetup() {
                   <div className="text-gray-500">
                     Step {currentStep} of {steps.length}
                   </div>
+                </div>
                 </div>
               </div>
             </div>

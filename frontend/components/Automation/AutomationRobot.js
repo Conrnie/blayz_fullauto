@@ -39,7 +39,7 @@ const AutomationRobot = ({ currentStep, setupData }) => {
   const { message, tip } = getRobotMessage();
   
   return (
-    <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl p-6 sticky top-8 shadow-xl border border-white/10">
+    <div className="bg-slate-800 rounded-xl p-6 sticky top-8 shadow-lg">
       {/* Robot Avatar */}
       <div className="flex justify-center mb-6">
         <div className="relative">
