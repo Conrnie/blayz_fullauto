@@ -179,7 +179,10 @@ async def compare_strategies(scenario_name: str):
     results = {}
     
     for strategy in strategies:
-        test_input = CampaignTestInput(**{**scenario_data, "strategy": strategy})
+        # Create a copy and override strategy
+        input_data = scenario_data.copy()
+        input_data["strategy"] = strategy
+        test_input = CampaignTestInput(**input_data)
         result = await test_campaign_scenario(test_input)
         
         results[strategy] = {

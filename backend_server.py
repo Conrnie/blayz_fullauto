@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-
+"""
+Backend server startup script using Uvicorn for FastAPI
+Uses port 8001 to avoid conflict with frontend on port 5000
+"""
+import uvicorn
 import sys
 import os
 import pathlib
@@ -8,37 +12,30 @@ import pathlib
 backend_path = pathlib.Path(__file__).parent / "backend"
 sys.path.insert(0, str(backend_path))
 
-# Now import the FastAPI app
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-# Create FastAPI app
-app = FastAPI(title="Blayz Automation API", description="AI-powered Meta ads automation system")
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Import routers
+# Import the main FastAPI app from backend
 try:
-    from app.routers import automation
-    app.include_router(automation.router, prefix="/api")
+    from app.main import app
+    print("✅ Successfully imported FastAPI app from backend")
 except ImportError as e:
-    print(f"Warning: Could not import automation router: {e}")
-
-@app.get("/")
-async def root():
-    return {"message": "Blayz Automation API is running", "status": "healthy", "version": "1.0.0"}
-
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "service": "backend"}
+    print(f"❌ Failed to import backend app: {e}")
+    # Fallback: create a minimal app
+    from fastapi import FastAPI
+    app = FastAPI(title="Blayz API Fallback", description="Meta Advertising Analytics Platform")
+    
+    @app.get("/")
+    async def root():
+        return {"message": "Blayz API is running (fallback mode)", "status": "healthy"}
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("backend_server:app", host="0.0.0.0", port=8000, reload=True)
+    print("🚀 Starting Blayz Backend Server...")
+    print("📍 Server URL: http://localhost:8001")
+    print("📚 API Docs: http://localhost:8001/docs")
+    
+    # Use Uvicorn (ASGI server) instead of Gunicorn (WSGI server) for FastAPI
+    uvicorn.run(
+        "backend_server:app",
+        host="0.0.0.0",
+        port=8001,  # Use port 8001 to avoid conflict with frontend on 5000
+        reload=True,
+        log_level="info"
+    )
