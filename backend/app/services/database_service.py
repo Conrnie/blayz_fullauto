@@ -1,4 +1,3 @@
-import asyncpg
 import logging
 import os
 from typing import Dict, Any, List, Optional
@@ -9,6 +8,7 @@ from app.models_automation import (
     AutomationSetup, AutomationRun, AgentDecision, 
     AgentAction, OptimizationResult, PerformanceSnapshot
 )
+from app.services.connection_pool import db_pool
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +20,9 @@ class DatabaseService:
     """
     
     def __init__(self):
-        self.database_url = os.getenv("DATABASE_URL")
-        if not self.database_url:
-            raise ValueError("DATABASE_URL environment variable is required")
+        self.pool = db_pool  # Use the singleton connection pool
     
-    async def get_connection(self):
-        """Get database connection"""
-        return await asyncpg.connect(self.database_url)
-    
-    async def save_automation_setup(self, setup: AutomationSetup) -> str:
+    async def save_automation_setup(self, setup: AutomationSetup) -> Optional[str]:
         """
         Save automation configuration
         
@@ -39,9 +33,7 @@ class DatabaseService:
             Created automation setup ID
         """
         try:
-            conn = await self.get_connection()
-            try:
-                query = """
+            query = """
                 INSERT INTO automation_setups 
                 (id, user_id, campaign_id, campaign_name, company_profile_id, 
                  strategy_id, offer_id, automation_frequency, custom_settings, 
@@ -49,8 +41,8 @@ class DatabaseService:
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 RETURNING id
                 """
-                
-                result = await conn.fetchrow(
+            
+            result = await self.pool.fetchrow(
                     query,
                     setup.id,
                     setup.user_id,
@@ -64,17 +56,14 @@ class DatabaseService:
                     setup.status.value,
                     setup.created_at,
                     setup.updated_at
-                )
-                
-                logger.info(f"Saved automation setup {setup.id}")
-                return result['id']
-                
-            finally:
-                await conn.close()
+            )
+            
+            logger.info(f"Saved automation setup {setup.id}")
+            return result['id']
                 
         except Exception as e:
             logger.error(f"Failed to save automation setup: {str(e)}")
-            raise
+            return None
     
     async def get_automation_setup(self, automation_id: str) -> Optional[Dict[str, Any]]:
         """
@@ -87,21 +76,16 @@ class DatabaseService:
             Automation setup data or None
         """
         try:
-            conn = await self.get_connection()
-            try:
-                query = """
+            query = """
                 SELECT * FROM automation_setups WHERE id = $1
                 """
-                result = await conn.fetchrow(query, automation_id)
+            result = await self.pool.fetchrow(query, automation_id)
                 
-                if result:
-                    data = dict(result)
-                    data['custom_settings'] = json.loads(data['custom_settings']) if data['custom_settings'] else {}
-                    return data
-                return None
-                
-            finally:
-                await conn.close()
+            if result:
+                data = dict(result)
+                data['custom_settings'] = json.loads(data['custom_settings']) if data['custom_settings'] else {}
+                return data
+            return None
                 
         except Exception as e:
             logger.error(f"Failed to get automation setup: {str(e)}")
@@ -118,35 +102,30 @@ class DatabaseService:
             Created automation run ID
         """
         try:
-            conn = await self.get_connection()
-            try:
-                query = """
+            query = """
                 INSERT INTO automation_runs
                 (id, automation_id, run_number, status, started_at, completed_at,
                  error_message, performance_before, performance_after, changes_summary)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                 RETURNING id
                 """
-                
-                result = await conn.fetchrow(
-                    query,
-                    run.id,
-                    run.automation_id,
-                    run.run_number,
-                    run.status,
-                    run.started_at,
-                    run.completed_at,
-                    run.error_message,
-                    json.dumps(run.performance_before),
-                    json.dumps(run.performance_after),
-                    json.dumps(run.changes_summary)
-                )
-                
-                logger.info(f"Saved automation run {run.id}")
-                return result['id']
-                
-            finally:
-                await conn.close()
+            
+            result = await self.pool.fetchrow(
+                query,
+                run.id,
+                run.automation_id,
+                run.run_number,
+                run.status,
+                run.started_at,
+                run.completed_at,
+                run.error_message,
+                json.dumps(run.performance_before),
+                json.dumps(run.performance_after),
+                json.dumps(run.changes_summary)
+            )
+            
+            logger.info(f"Saved automation run {run.id}")
+            return result['id']
                 
         except Exception as e:
             logger.error(f"Failed to save automation run: {str(e)}")
@@ -163,9 +142,7 @@ class DatabaseService:
             Created decision ID
         """
         try:
-            conn = await self.get_connection()
-            try:
-                query = """
+            query = """
                 INSERT INTO agent_decisions
                 (id, automation_run_id, agent_type, situation_analysis, 
                  identified_issues, identified_opportunities, decision_reasoning,
@@ -173,8 +150,8 @@ class DatabaseService:
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                 RETURNING id
                 """
-                
-                result = await conn.fetchrow(
+            
+            result = await self.pool.fetchrow(
                     query,
                     decision.id,
                     decision.automation_run_id,
@@ -187,13 +164,10 @@ class DatabaseService:
                     decision.priority_score,
                     decision.confidence_score,
                     decision.timestamp
-                )
-                
-                logger.info(f"Saved agent decision {decision.id}")
-                return result['id']
-                
-            finally:
-                await conn.close()
+            )
+            
+            logger.info(f"Saved agent decision {decision.id}")
+            return result['id']
                 
         except Exception as e:
             logger.error(f"Failed to save agent decision: {str(e)}")
@@ -210,9 +184,7 @@ class DatabaseService:
             Created action ID
         """
         try:
-            conn = await self.get_connection()
-            try:
-                query = """
+            query = """
                 INSERT INTO agent_actions
                 (id, automation_run_id, agent_type, input_data, analysis_results,
                  action_type, action_details, execution_status, execution_result,
@@ -220,8 +192,8 @@ class DatabaseService:
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                 RETURNING id
                 """
-                
-                result = await conn.fetchrow(
+            
+            result = await self.pool.fetchrow(
                     query,
                     action.id,
                     action.automation_run_id,
@@ -235,13 +207,10 @@ class DatabaseService:
                     action.error_message,
                     json.dumps(action.meta_api_calls),
                     action.timestamp
-                )
-                
-                logger.info(f"Saved agent action {action.id}")
-                return result['id']
-                
-            finally:
-                await conn.close()
+            )
+            
+            logger.info(f"Saved agent action {action.id}")
+            return result['id']
                 
         except Exception as e:
             logger.error(f"Failed to save agent action: {str(e)}")
@@ -259,29 +228,24 @@ class DatabaseService:
             List of automation run records
         """
         try:
-            conn = await self.get_connection()
-            try:
-                query = """
+            query = """
                 SELECT * FROM automation_runs 
                 WHERE automation_id = $1 
                 ORDER BY started_at DESC 
                 LIMIT $2
                 """
+            
+            results = await self.pool.fetch(query, automation_id, limit)
                 
-                results = await conn.fetch(query, automation_id, limit)
-                
-                history = []
-                for result in results:
-                    data = dict(result)
-                    data['performance_before'] = json.loads(data['performance_before']) if data['performance_before'] else {}
-                    data['performance_after'] = json.loads(data['performance_after']) if data['performance_after'] else {}
-                    data['changes_summary'] = json.loads(data['changes_summary']) if data['changes_summary'] else {}
-                    history.append(data)
-                
-                return history
-                
-            finally:
-                await conn.close()
+            history = []
+            for result in results:
+                data = dict(result)
+                data['performance_before'] = json.loads(data['performance_before']) if data['performance_before'] else {}
+                data['performance_after'] = json.loads(data['performance_after']) if data['performance_after'] else {}
+                data['changes_summary'] = json.loads(data['changes_summary']) if data['changes_summary'] else {}
+                history.append(data)
+            
+            return history
                 
         except Exception as e:
             logger.error(f"Failed to get automation history: {str(e)}")
@@ -298,26 +262,21 @@ class DatabaseService:
             List of user's automation setups
         """
         try:
-            conn = await self.get_connection()
-            try:
-                query = """
+            query = """
                 SELECT * FROM automation_setups 
                 WHERE user_id = $1 
                 ORDER BY created_at DESC
                 """
-                
-                results = await conn.fetch(query, user_id)
-                
-                automations = []
-                for result in results:
-                    data = dict(result)
-                    data['custom_settings'] = json.loads(data['custom_settings']) if data['custom_settings'] else {}
-                    automations.append(data)
-                
-                return automations
-                
-            finally:
-                await conn.close()
+            
+            results = await self.pool.fetch(query, user_id)
+            
+            automations = []
+            for result in results:
+                data = dict(result)
+                data['custom_settings'] = json.loads(data['custom_settings']) if data['custom_settings'] else {}
+                automations.append(data)
+            
+            return automations
                 
         except Exception as e:
             logger.error(f"Failed to get user automations: {str(e)}")

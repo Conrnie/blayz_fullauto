@@ -3,6 +3,8 @@ import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timedelta
 import asyncio
+import time
+from functools import wraps
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +18,29 @@ class MetaAPIService:
     def __init__(self):
         self.base_url = "https://graph.facebook.com/v18.0"
         self.timeout = 30.0
+        self.rate_limit_delay = 1.0  # Delay between API calls
+        self.last_api_call = 0
+        self.max_retries = 3
+        self.retry_delay = 2.0
+    
+    async def _rate_limit(self):
+        """Implement rate limiting for API calls"""
+        elapsed = time.time() - self.last_api_call
+        if elapsed < self.rate_limit_delay:
+            await asyncio.sleep(self.rate_limit_delay - elapsed)
+        self.last_api_call = time.time()
+    
+    async def _retry_with_backoff(self, func, *args, **kwargs):
+        """Retry failed API calls with exponential backoff"""
+        for attempt in range(self.max_retries):
+            try:
+                return await func(*args, **kwargs)
+            except Exception as e:
+                if attempt == self.max_retries - 1:
+                    raise
+                wait_time = self.retry_delay * (2 ** attempt)
+                logger.warning(f"API call failed, retrying in {wait_time}s: {str(e)}")
+                await asyncio.sleep(wait_time)
     
     async def get_campaign_insights(self, campaign_id: str, date_range: str = "yesterday", access_token: Optional[str] = None) -> Dict[str, Any]:
         """

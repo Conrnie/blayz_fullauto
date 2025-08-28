@@ -2,7 +2,7 @@
 
 ## Overview
 
-Blayz is an AI-powered Meta (Facebook) advertising analytics platform built to help agencies and marketers optimize their ad campaigns. The application provides comprehensive campaign analysis, anomaly detection, and actionable recommendations through AI-powered insights. It features a Next.js frontend, FastAPI backend, and Supabase database with real-time capabilities.
+Blayz is a fully automated Meta ads management system with AI agents that optimize campaigns automatically. The platform features a 5-step automation wizard and specialized AI agents (Orchestrator, Analytics, Creative, Copy, Scaling) that coordinate to optimize Meta campaigns based on performance data and predefined strategies. Built with Next.js frontend, FastAPI backend, and PostgreSQL database.
 
 ## User Preferences
 
@@ -18,10 +18,11 @@ Preferred communication style: Simple, everyday language.
 - **Deployment**: Netlify with custom domain (blayz.io)
 
 ### Backend Architecture
-- **API Layer**: FastAPI with Python for backend services
-- **Database**: Supabase (PostgreSQL) with Row Level Security (RLS)
-- **Edge Functions**: Supabase Edge Functions for Meta API integration
-- **Real-time Features**: Supabase real-time subscriptions for live data updates
+- **API Layer**: FastAPI with Python for backend services (port 8000)
+- **Database**: PostgreSQL with connection pooling and Row Level Security (RLS)
+- **AI Agents**: Multi-agent system with Orchestrator coordinating specialized agents
+- **Error Recovery**: Circuit breakers, retry logic, and health checks
+- **Monitoring**: Structured logging, metrics collection, and execution time tracking
 - **Authentication**: JWT token validation using Supabase Auth
 
 ### Database Design
@@ -36,11 +37,32 @@ Preferred communication style: Simple, everyday language.
 - **Token Management**: Long-lived access tokens stored securely in database
 - **Authorization**: RLS policies ensuring users only access their own data
 
-### AI Analysis System
-- **Primary AI**: Google Gemini 2.5 Pro via Requesty API for final analysis
-- **Secondary AI**: DeepSeek V3 via Chutes API for intermediate processing
-- **Analysis Types**: Campaign performance, anomaly detection, demographic insights
-- **Iterative Approach**: Multi-step analysis with specialized prompts for different insights
+### AI Agent System
+- **Orchestrator Agent**: Central coordinator analyzing campaigns and activating specialized agents
+- **Analytics Agent**: Performance analysis and optimization recommendations
+- **Creative Agent**: Ad creative generation and refresh strategies
+- **Copy Agent**: Ad copy optimization and A/B testing
+- **Scaling Agent**: Budget optimization and campaign scaling
+- **Decision Engine**: Configurable thresholds based on strategy (conservative/balanced/aggressive)
+- **Validation**: Input validation with Pydantic models ensuring data integrity
+
+## Recent Improvements (August 28, 2025)
+
+### Production-Ready Enhancements
+- **Fixed Database Service**: Resolved all indentation errors and implemented connection pooling
+- **Added Orchestrator Configuration**: Centralized thresholds with strategy-based profiles (conservative/balanced/aggressive)
+- **Input Validation**: Pydantic models for campaign metrics and automation data validation
+- **Enhanced Monitoring**: Structured logging with context, metrics collection, and execution time tracking
+- **Error Recovery**: Circuit breakers, retry logic with exponential backoff, and health checks
+- **Rate Limiting**: Meta API rate limiting to prevent quota exhaustion
+- **Connection Pooling**: Async database connection pooling for better performance (10-20 connections)
+
+### Code Quality Improvements
+- **Modular Architecture**: Separated concerns into validators, config, monitoring, and recovery modules
+- **Type Safety**: Strong typing with Pydantic models and TypeVar generics
+- **Async/Await**: Proper async patterns throughout the backend
+- **Error Handling**: Comprehensive try-catch blocks with proper logging
+- **Documentation**: Added docstrings and inline comments for maintainability
 
 ## External Dependencies
 

@@ -72,7 +72,8 @@ class BaseAgent(ABC):
         action = AgentAction(
             automation_run_id=automation_run_id,
             agent_type=self.agent_type,
-            input_data=input_data
+            input_data=input_data,
+            action_type="pending"  # Default action type
         )
         
         try:

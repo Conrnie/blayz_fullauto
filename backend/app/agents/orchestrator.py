@@ -1,13 +1,16 @@
 from typing import Dict, Any, List
-import logging
 from datetime import datetime, timedelta
 
 from app.agents.base_agent import BaseAgent
+from app.agents.orchestrator_config import OrchestratorConfig
+from app.agents.validators import validate_agent_input, validate_campaign_metrics, DecisionContext
 from app.models_automation import AgentType, AgentDecision, PerformanceSnapshot
 from app.services.meta_api_service import MetaAPIService
 from app.services.database_service import DatabaseService
+from app.utils.monitoring import AutomationLogger, log_execution_time, metrics
+from app.utils.error_recovery import with_retry, CircuitBreaker
 
-logger = logging.getLogger(__name__)
+logger = AutomationLogger(__name__)
 
 
 class OrchestratorAgent(BaseAgent):
@@ -23,24 +26,32 @@ class OrchestratorAgent(BaseAgent):
         super().__init__(AgentType.ORCHESTRATOR)
         self.meta_api = MetaAPIService()
         self.db = DatabaseService()
-        
-        # Decision thresholds - can be made configurable per strategy
-        self.thresholds = {
-            "ctr_low": 1.0,           # CTR below 1% needs attention
-            "cpl_high_multiplier": 1.3, # CPL 30% above target
-            "frequency_high": 3.5,     # Ad fatigue threshold
-            "budget_underutilization": 0.7, # Using less than 70% of budget
-            "spend_spike": 1.5,        # 50% increase in daily spend
-        }
+        self.config = OrchestratorConfig()
+        self.thresholds = {}  # Will be set based on strategy
     
+    @log_execution_time
+    @with_retry(max_attempts=3, delay=2.0)
     async def analyze(self, input_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         Analyze current campaign performance and identify issues/opportunities
         """
-        campaign_id = input_data.get("campaign_id")
-        automation_setup = input_data.get("automation_setup", {})
+        # Validate input
+        validated_input = validate_agent_input(input_data)
+        campaign_id = validated_input.campaign_id
+        automation_setup = validated_input.automation_setup
         
-        logger.info(f"Orchestrator analyzing campaign {campaign_id}")
+        # Set thresholds based on strategy
+        strategy = automation_setup.get('strategy_id', 'balanced')
+        self.thresholds = OrchestratorConfig.get_thresholds_for_strategy(strategy)
+        
+        logger.info(f"Orchestrator analyzing campaign {campaign_id}", campaign_id=campaign_id, strategy=strategy)
+        
+        # Record metrics for monitoring
+        metrics.record_metric(
+            "orchestrator.analysis_started",
+            1.0,
+            {"campaign_id": campaign_id, "strategy": strategy}
+        )
         
         # Get current performance metrics
         current_metrics = await self.meta_api.get_campaign_insights(
@@ -143,7 +154,19 @@ class OrchestratorAgent(BaseAgent):
             "recommended_timeline": "immediate" if priority_score > 0.5 else "next_cycle"
         }
         
-        logger.info(f"Orchestrator decisions: {len(agents_to_activate)} agents to activate, priority: {priority_score:.2f}")
+        logger.info(
+            f"Orchestrator decisions: {len(agents_to_activate)} agents to activate, priority: {priority_score:.2f}",
+            agents_count=len(agents_to_activate),
+            priority_score=priority_score,
+            confidence_score=confidence_score
+        )
+        
+        # Record decision metrics
+        metrics.record_metric(
+            "orchestrator.decision_made",
+            float(len(agents_to_activate)),
+            {"priority": str(priority_score), "confidence": str(confidence_score)}
+        )
         
         return decisions
     
