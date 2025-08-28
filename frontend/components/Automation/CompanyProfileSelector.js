@@ -60,10 +60,10 @@ const CompanyProfileSelector = ({ onSelect, selectedProfile }) => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white mb-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">
         Select Company Profile
       </h2>
-      <p className="text-slate-300 mb-8">
+      <p className="text-gray-600 mb-8">
         Choose the company profile that matches your campaign. This helps me create on-brand creatives and messaging.
       </p>
       
@@ -75,8 +75,8 @@ const CompanyProfileSelector = ({ onSelect, selectedProfile }) => {
             className={`
               p-6 rounded-lg border cursor-pointer transition-all
               ${selectedProfile?.id === profile.id
-                ? 'border-purple-600 bg-purple-900/20'
-                : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                ? 'border-[#FE8401] bg-orange-50'
+                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
               }
             `}
           >
@@ -84,10 +84,10 @@ const CompanyProfileSelector = ({ onSelect, selectedProfile }) => {
               <div className="flex items-center space-x-4">
                 <div className="text-3xl">{profile.logo}</div>
                 <div>
-                  <h3 className="text-lg font-semibold text-white">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     {profile.name}
                   </h3>
-                  <p className="text-purple-400 text-sm font-medium">
+                  <p className="text-[#FE8401] text-sm font-medium">
                     {profile.industry}
                   </p>
                 </div>

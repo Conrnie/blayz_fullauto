@@ -87,8 +87,8 @@ export default function AutomationSetup() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-white">
-        <div className="container mx-auto px-4 py-8">
+      <div className="bg-white">
+        <div className="container mx-auto px-6 py-8">
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -134,8 +134,7 @@ export default function AutomationSetup() {
           </div>
 
           {/* Main Content */}
-          <div className="max-w-6xl mx-auto">
-            <div className="flex gap-8">
+          <div className="flex gap-8 max-w-6xl mx-auto">
               {/* Robot Assistant */}
               <div className="w-80 flex-shrink-0">
                 <AutomationRobot 
@@ -166,7 +165,6 @@ export default function AutomationSetup() {
                   <div className="text-gray-500">
                     Step {currentStep} of {steps.length}
                   </div>
-                </div>
                 </div>
               </div>
             </div>

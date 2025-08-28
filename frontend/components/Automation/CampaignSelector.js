@@ -60,7 +60,7 @@ const CampaignSelector = ({ onSelect, selectedCampaign }) => {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-white mb-6">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">
         Select Campaign to Automate
       </h2>
       
@@ -72,14 +72,14 @@ const CampaignSelector = ({ onSelect, selectedCampaign }) => {
             className={`
               p-6 rounded-lg border cursor-pointer transition-all
               ${selectedCampaign?.id === campaign.id
-                ? 'border-purple-600 bg-purple-900/20'
-                : 'border-slate-600 bg-slate-700/50 hover:border-slate-500'
+                ? 'border-[#FE8401] bg-orange-50'
+                : 'border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
               }
             `}
           >
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-semibold text-white">
+                <h3 className="text-lg font-semibold text-gray-900">
                   {campaign.name}
                 </h3>
                 <div className="flex items-center space-x-4 mt-1">
@@ -99,31 +99,31 @@ const CampaignSelector = ({ onSelect, selectedCampaign }) => {
               </div>
               
               <div className="text-right">
-                <div className="text-2xl font-bold text-white">
+                <div className="text-2xl font-bold text-gray-900">
                   ${campaign.cpl}
                 </div>
-                <div className="text-slate-400 text-sm">Cost per Lead</div>
+                <div className="text-gray-500 text-sm">Cost per Lead</div>
               </div>
             </div>
             
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <div className="text-slate-400">Daily Budget</div>
-                <div className="text-white font-medium">${campaign.dailyBudget}</div>
+                <div className="text-gray-500">Daily Budget</div>
+                <div className="text-gray-900 font-medium">${campaign.dailyBudget}</div>
               </div>
               <div>
-                <div className="text-slate-400">Total Leads</div>
-                <div className="text-white font-medium">{campaign.leads}</div>
+                <div className="text-gray-500">Total Leads</div>
+                <div className="text-gray-900 font-medium">{campaign.leads}</div>
               </div>
               <div>
-                <div className="text-slate-400">Total Spend</div>
-                <div className="text-white font-medium">${campaign.spend}</div>
+                <div className="text-gray-500">Total Spend</div>
+                <div className="text-gray-900 font-medium">${campaign.spend}</div>
               </div>
             </div>
             
             {selectedCampaign?.id === campaign.id && (
-              <div className="mt-4 pt-4 border-t border-slate-600">
-                <div className="flex items-center text-purple-400">
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center text-[#FE8401]">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
@@ -136,8 +136,8 @@ const CampaignSelector = ({ onSelect, selectedCampaign }) => {
       </div>
       
       {!selectedCampaign && (
-        <div className="mt-6 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-          <p className="text-slate-300 text-sm">
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-gray-600 text-sm">
             💡 Select a campaign above to set up full automation. The system will optimize creatives, scaling, and targeting based on your strategy.
           </p>
         </div>
