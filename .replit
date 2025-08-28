@@ -1,4 +1,4 @@
-modules = ["nodejs-20", "python-3.11", "web", "postgresql-16"]
+modules = ["nodejs-20", "python-3.11", "web", "postgresql-16", "python3"]
 run = "node index.js"
 
 [nix]
@@ -54,4 +54,4 @@ localPort = 5000
 externalPort = 80
 
 [agent]
-integrations = ["python_log_in_with_replit==1.0.0", "python_openai==1.0.0", "python_database==1.0.0", "python_anthropic==1.0.0"]
+integrations = ["python_anthropic==1.0.0", "python_log_in_with_replit==1.0.0", "python_database==1.0.0", "flask_supabase==1.0.0", "python_openai==1.0.0", "python_gemini==1.0.0"]
