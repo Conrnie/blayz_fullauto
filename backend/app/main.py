@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.status import HTTP_401_UNAUTHORIZED
 import logging
 
-from app.routers import auth as auth_router, insights, trend_analysis, sync, data_status, test, company_profiles, automation
+from app.routers import auth as auth_router, insights, trend_analysis, sync, data_status, test, company_profiles, automation, agent_testing
 # Temporarily commented out facebook import due to requests dependency issue
 # from app.routers import facebook
 from app.auth import validate_token
@@ -60,7 +60,7 @@ async def auth_middleware(request: Request, call_next):
     # Log all incoming request paths and their auth headers for debugging this specific issue
     logger.info(f"[MIDDLEWARE_DEBUG] Path: {request.url.path}, Auth Header: {request.headers.get('Authorization')}", extra={"event_type": "middleware_path_auth_header_debug"})
 
-    if request.url.path in ["/health", "/docs", "/openapi.json", "/api/v1/test/hello", "/api/company-profiles/webhook-callback"] or request.url.path.startswith("/docs/") or request.url.path.startswith("/api/v1/public/"):
+    if request.url.path in ["/health", "/docs", "/openapi.json", "/api/v1/test/hello", "/api/company-profiles/webhook-callback"] or request.url.path.startswith("/docs/") or request.url.path.startswith("/api/v1/public/") or request.url.path.startswith("/api/agent-testing/"):
         return await call_next(request)
     
     auth_header = request.headers.get("Authorization")
@@ -140,6 +140,8 @@ app.include_router(company_profiles.router, prefix="/api/company-profiles", tags
 logger.info("Company Profiles router included with prefix /api/company-profiles", extra={"event_type": "router_inclusion", "router": "company_profiles"})
 app.include_router(automation.router, tags=["Automation"])
 logger.info("Automation router included", extra={"event_type": "router_inclusion", "router": "automation"})
+app.include_router(agent_testing.router, prefix="/api/agent-testing", tags=["Agent Testing"])
+logger.info("Agent Testing router included with prefix /api/agent-testing", extra={"event_type": "router_inclusion", "router": "agent_testing"})
 
 @app.on_event("startup")
 async def startup_event():
