@@ -1,0 +1,56 @@
+Phase 0: Foundational Setup
+Purpose: Gather basics to ensure the AI can launch campaigns without errors.
+Questions:
+
+"What's your primary business goal for these ads (e.g., drive sales, generate leads, increase traffic)?"
+"Which Meta campaign objective aligns best (e.g., 'Sales' for purchases, 'Leads' for forms)?"
+"Can you describe your product/service/offer briefly (e.g., e-commerce apparel, SaaS subscriptions)? Include any catalog feeds or URLs."
+"Is your Meta Pixel and Conversions API set up? What key events are tracked (e.g., Purchase, AddToCart)?"
+"Any account limits, like daily spend caps or API access preferences?"
+"Preferred ad placements (e.g., auto via Advantage+, or limit to Facebook Feed and Instagram)?"
+"Bidding strategy? (e.g., auto-bidding, cost cap at $X, or minimum ROAS of Y)."
+
+Phase 1: Creative Testing Operations
+Purpose: Define rules for testing and refreshing assets.
+Questions:
+
+"How many creatives do you typically test per campaign or ad set (e.g., 5-10)?"
+"What triggers a creative refresh (e.g., every 7 days, or if CTR drops below 1%)?"
+"Rules for ad copy variations (e.g., number of hooks, CTAs, personalization)?"
+"Do you want to use Advantage+ Creative for auto-adjustments (e.g., mixing assets)?"
+"Key metrics for creative performance (e.g., CTR >1%, video completion >50%)?"
+
+Phase 2: Budget & Scaling Operations
+Purpose: Set financial rules and growth logic.
+Questions:
+
+"What's your initial testing budget per ad set or campaign (e.g., $50/day)?"
+"Performance triggers for scaling up (e.g., ROAS >2x after $200 spend, or CPA <$25)?"
+"How do you prefer to scale (e.g., increase budget by 20% daily, or duplicate ad sets)?"
+"Criteria to kill or pause campaigns (e.g., CPA >$40 after $300 spend)?"
+"How long to wait during the learning phase before scaling (e.g., after 50 conversions)?"
+"Budget allocation preference (e.g., use Advantage Campaign Budget for AI distribution)?"
+
+Phase 3: Targeting & Structure Operations
+Purpose: Outline audience and campaign architecture.
+Questions:
+
+"Approach to audience testing (e.g., start broad, then test lookalikes at 1-5% similarity)?"
+"Campaign structure preferences (e.g., CBO for optimization, ABO for more control)?"
+"Geographic strategy (e.g., national, specific countries, or geo-radius targeting)?"
+"Audience types to include (e.g., custom from website visitors, exclusions like recent buyers)?"
+"Use Advantage+ Audience for AI expansions? Any retargeting rules (e.g., separate ad sets for cart abandoners)?"
+"Rules to avoid over-targeting (e.g., max 3 interest layers; let AI handle the rest)?"
+
+Phase 4: Optimization Operations
+Purpose: Define ongoing tweaks and metrics.
+Questions:
+
+"Primary KPI to optimize for (e.g., ROAS for sales, CPA for leads)?"
+"How long to wait before making optimizations (e.g., 72 hours post-launch)?"
+"Specific actions for optimization (e.g., pause low-performers, boost winners)?"
+"Secondary metrics to track (e.g., CTR, CPC, frequency thresholds)?"
+"Integrate Advantage+ for auto-optimizing placements/creatives/audiences?"
+"A/B testing setup (e.g., number of variants, 50/50 split, win criteria like +10% ROAS)?"
+"Any seasonal adjustments (e.g., +30% budget during holidays)?"
+
