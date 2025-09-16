@@ -99,11 +99,24 @@ const SignupForm = () => {
           />
         </div>
 
+        {/* Alternative Signup Methods */}
+        <div className="mt-6 pt-6 border-t border-gray-700">
+          <p className="text-center text-sm text-gray-400 mb-3">
+            Or sign up with email:
+          </p>
+          <Link 
+            href="/auth/login" 
+            className="w-full flex justify-center py-2 px-4 border border-gray-600 rounded-md text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 transition-colors"
+          >
+            Sign up with Email & Password
+          </Link>
+        </div>
+
         {/* Footer Links */}
         <div className="text-center space-y-2">
           <div className="text-sm">
             <Link href="/auth/login" className="text-primary hover:text-primary/80">
-              Already have an account? Sign in
+              Already have an account? Sign In
             </Link>
           </div>
           <div className="text-sm">

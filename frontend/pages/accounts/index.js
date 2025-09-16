@@ -260,64 +260,29 @@ const AccountsPage = () => {
 
   // --- Fetch Ad Accounts from DB ---
   const fetchAdAccounts = async () => {
-    // Avoid fetching if we are currently processing a new connection
-    if (isProcessing) {
-        log("Skipping fetchAdAccounts while processing a connection.");
-        return;
+  setIsLoading(true);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      setError('Authentication required');
+      setIsConnected(false);
+      return;
     }
-    
-    log('Fetching ad accounts from database...');
-    setIsLoading(true); // Indicate loading while fetching
-    setError(null); // Clear previous errors
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        log('No session found, cannot fetch accounts.');
-        setIsConnected(false); // Assume not connected if not logged in
-        setAdAccounts([]);
-        return;
-      }
-      log(`Session found for fetching accounts, user ID: ${session.user.id}`);
-
-      const functionUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/get-meta-ad-accounts`;
-      log(`Calling get-meta-ad-accounts URL: ${functionUrl}`);
-      
-      const response = await fetch(
-        functionUrl,
-        {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
-        }
-      );
-
-      log(`Get ad accounts response status: ${response.status}`);
-      const result = await response.json();
-      log(`Get ad accounts response data: ${JSON.stringify(result)}`);
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to fetch ad accounts');
-      }
-
-      setIsConnected(result.connected);
-      setAdAccounts(result.accounts || []);
-
-      if (!result.connected && result.message && result.message !== 'No Meta account connected') {
-        log(`Setting connection message/error: ${result.message}`);
-        // Display specific messages like "token expired"
-        setError(result.message); 
-      }
-      
-    } catch (err) {
-      log(`Error fetching ad accounts: ${err.message}`);
-      setError(`Error loading ad accounts: ${err.message}`);
-      setIsConnected(false); // Assume disconnected on error
-      setAdAccounts([]);
-    } finally {
-      setIsLoading(false); // Stop loading indicator
-      log('Finished fetching ad accounts.');
-    }
-  };
+    const { data, error } = await supabase
+      .from('ad_accounts')
+      .select('*')
+      .eq('user_id', session.user.id);
+    if (error) throw error;
+    setAdAccounts(data || []);
+    setIsConnected(data && data.length > 0);
+  } catch (error) {
+    console.error('Error fetching ad accounts:', error);
+    setError('Failed to fetch ad accounts from Supabase.');
+    setIsConnected(false);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // --- Sync Campaign Data ---
   const handleSyncCampaigns = async () => {

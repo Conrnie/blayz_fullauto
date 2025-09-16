@@ -50,7 +50,7 @@ export default async function handler(req, res) {
 
     // Handle GET request - list company profiles
     if (req.method === 'GET') {
-      console.log(`Fetching company profiles for user: ${userId}`);
+      console.log(`API called: GET company profiles for user ID: ${userId}`);
       
       try {
         const { data: profiles, error } = await supabase
@@ -106,6 +106,8 @@ export default async function handler(req, res) {
       } catch (dbError) {
         console.error('Database error:', dbError);
         return res.status(500).json({ error: 'Database operation failed' });
+        console.log('Query executed. Error:', error);
+        console.log('Profiles returned:', profiles ? profiles.length : 0);
       }
     }
 
@@ -220,4 +222,4 @@ export default async function handler(req, res) {
     console.error('API error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-} 
+}

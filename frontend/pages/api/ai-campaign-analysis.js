@@ -470,7 +470,11 @@ export default async function handler(req, res) {
       const systemPrompt = `You are an expert Meta Ads performance analyst specializing in campaign optimization. Your task is to analyze Facebook/Instagram ad campaign data and provide actionable insights and recommendations based on statistical analysis. Use your expertise to identify performance patterns, outliers, and optimization opportunities based on Z-scores, spend percentages, and volume metrics. Focus on data-driven recommendations that will maximize ROAS, minimize CPA, and improve overall campaign performance.`;
       
       const jsonDataString = JSON.stringify(dataForAI, null, 2);
-      const userPrompt = USER_PROMPT_INSTRUCTIONS.replace('__CAMPAIGN_DATA_JSON__', jsonDataString);
+      let userPrompt = USER_PROMPT_INSTRUCTIONS.replace('__CAMPAIGN_DATA_JSON__', jsonDataString);
+
+      if (req.body.userMessage) {
+        userPrompt += `\n\nAdditional user question about this analysis: ${req.body.userMessage}\nAnswer the question based on the analysis data provided, providing insights and recommendations as appropriate.`;
+      }
 
       const result = await generateAIAnalysis(systemPrompt, userPrompt);
       
