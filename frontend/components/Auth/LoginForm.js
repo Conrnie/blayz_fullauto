@@ -87,6 +87,19 @@ const LoginForm = () => {
           </ul>
         </div>
 
+        {/* Alternative Login Methods */}
+        <div className="mt-6 pt-6 border-t border-gray-700">
+          <p className="text-center text-sm text-gray-400 mb-3">
+            Or sign in with email:
+          </p>
+          <Link 
+            href="/auth/email-password-login" 
+            className="w-full flex justify-center py-2 px-4 border border-gray-600 rounded-md text-sm font-medium text-white bg-slate-700 hover:bg-slate-600 transition-colors"
+          >
+            Sign in with Email & Password
+          </Link>
+        </div>
+
         {/* Footer Links */}
         <div className="text-center space-y-2">
           <div className="text-sm">

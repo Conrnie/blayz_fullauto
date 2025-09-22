@@ -3,6 +3,7 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Layout from '../components/Layout/Layout';
 import { getSupabaseBrowserClient } from '../lib/supabaseClient.js';
+import { AuthProvider } from '../contexts/AuthContext';
 import '../styles/globals.css';
 
 // Import necessary MUI components
@@ -140,11 +141,12 @@ function MyApp({ Component, pageProps, emotionCache = clientSideEmotionCache }) 
 
   return (
     <ErrorBoundary>
-        <CacheProvider value={emotionCache}>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <Head>
-                    <title>Blayz - AI-Powered Meta Ads Performance Analysis</title>
+      <CacheProvider value={emotionCache}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AuthProvider>
+            <Head>
+              <title>Blayz - AI-Powered Meta Ads Performance Analysis</title>
                     <meta name="description" content="Stop wasting 30% of your Meta ad budget. Get AI-powered analysis, instant diagnostics, and actionable insights for your Facebook & Instagram campaigns." />
                     <meta name="keywords" content="Meta ads optimization, Facebook ads AI, Instagram ads analysis, campaign performance, ad spend optimization, ROI improvement" />
                     <meta name="author" content="Blayz" />
@@ -182,8 +184,9 @@ function MyApp({ Component, pageProps, emotionCache = clientSideEmotionCache }) 
                 ) : (
                   <Component {...pageProps} supabase={supabase} /> // Render component directly without Layout for landing page
                 )}
-            </ThemeProvider>
-        </CacheProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </CacheProvider>
     </ErrorBoundary>
   );
 }

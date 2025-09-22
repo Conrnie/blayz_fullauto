@@ -584,7 +584,7 @@ export default function CompanyProfilesPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-h-[600px] overflow-y-auto">
               {profiles.map((profile, index) => (
                 <div
                   key={profile.id}
@@ -1049,4 +1049,4 @@ function DeleteConfirmationModal({ isOpen, profile, onClose, onConfirm, isDeleti
       </div>
     </div>
   );
-} 
+}

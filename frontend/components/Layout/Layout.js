@@ -86,12 +86,14 @@ const Layout = ({ children }) => {
   
   // Main app layout with sidebar
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="flex flex-1">
+    <div className={`min-h-screen bg-gray-50 flex flex-col ${router.pathname === '/assistant-dashboard' ? 'h-screen' : ''}`}>
+      <div className={`flex ${router.pathname === '/assistant-dashboard' ? 'flex-1 h-full' : 'flex-1'}`}>
         <Sidebar />
-        <div className="flex-1 flex flex-col md:pl-72">
-          <main className="flex-1 bg-gray-50 py-8">
-            {children}
+        <div className={`flex-1 flex flex-col md:pl-72 ${router.pathname === '/assistant-dashboard' ? 'h-full' : ''}`}>
+          <main className={`flex-1 bg-gray-50 ${router.pathname === '/assistant-dashboard' ? 'h-full' : ''}`}>
+            <div className={`pt-8 px-4 sm:px-6 lg:px-8 ${router.pathname === '/assistant-dashboard' ? 'h-full pb-0' : 'pb-8'}`} >
+              {children}
+            </div>
           </main>
         </div>
       </div>

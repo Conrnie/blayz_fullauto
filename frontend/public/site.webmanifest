@@ -1,0 +1,16 @@
+{
+  "name": "Blayz - AI-Powered Meta Ads Analytics",
+  "short_name": "Blayz",
+  "description": "Transform your Meta Ads performance with AI-powered insights and automation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/phoenix.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

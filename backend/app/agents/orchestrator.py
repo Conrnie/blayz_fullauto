@@ -40,8 +40,8 @@ class OrchestratorAgent(BaseAgent):
         campaign_id = validated_input.campaign_id
         automation_setup = validated_input.automation_setup
         
-        # Set thresholds based on strategy
-        strategy = automation_setup.get('strategy_id', 'balanced')
+        # Set thresholds based on strategy (default to balanced since strategy step was removed)
+        strategy = 'balanced'  # Default strategy since strategy selection was removed from setup
         self.thresholds = OrchestratorConfig.get_thresholds_for_strategy(strategy)
         
         logger.info(f"Orchestrator analyzing campaign {campaign_id}", campaign_id=campaign_id, strategy=strategy)

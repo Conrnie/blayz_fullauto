@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useRouter } from 'next/router';
-import { supabase, getCurrentUser, signOut } from '../lib/supabase.js';
+import { getSupabaseBrowserClient } from '../lib/supabaseClient.js';
 
 // Create the auth context
 export const AuthContext = createContext();
@@ -13,14 +13,16 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const supabase = getSupabaseBrowserClient();
 
   // Set up auth state listener
   useEffect(() => {
+    if (!supabase) return;
     // Check for existing user
     const checkUser = async () => {
       try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
       } catch (error) {
         console.error('Error checking authentication:', error);
         setUser(null);
@@ -51,14 +53,15 @@ export const AuthProvider = ({ children }) => {
         authListener.subscription.unsubscribe();
       }
     };
-  }, [router]);
+  }, [router, supabase]);
 
   // Login function - already handled by the supabase lib
 
   // Logout function
   const logout = async () => {
+    if (!supabase) return;
     try {
-      await signOut();
+      await supabase.auth.signOut();
       setUser(null);
       router.push('/auth/login');
     } catch (error) {

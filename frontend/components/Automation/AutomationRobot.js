@@ -5,9 +5,9 @@ const AutomationRobot = ({ currentStep, setupData }) => {
     switch (currentStep) {
       case 1:
         return {
-          message: "Hi! I'm Blayz, your automation assistant. Let's start by selecting which campaign you'd like me to fully automate!",
-          tip: "I'll handle creative generation, scaling decisions, and targeting optimization 24/7."
-        };
+          message: "Hi! I'm Blayz, your marketing assistant. Let's start by selecting which campaign you'd like me to assist!",
+          suggestions: ['How do I choose a campaign?', 'What happens after I select a campaign?'],
+        }
       case 2:
         return {
           message: "Great choice! Now let's pick your company profile so I know your brand voice and style.",
@@ -20,13 +20,13 @@ const AutomationRobot = ({ currentStep, setupData }) => {
         };
       case 4:
         return {
-          message: "Almost there! Tell me about your offer and landing page so I can create compelling ads.",
+          message: "Final step! Tell me about your offer and landing page so I can create compelling ads.",
           tip: "Clear offer details help me generate high-converting ad creatives and copy."
         };
       case 5:
         return {
-          message: "Final step! Set how often you want me to check and optimize your campaigns.",
-          tip: "I recommend every 6-12 hours for active monitoring without over-optimization."
+          message: "Excellent! Your automation is fully configured. Review everything and launch when ready!",
+          tip: "Once launched, I'll start optimizing your campaigns 24/7 with real-time adjustments."
         };
       default:
         return {
@@ -37,89 +37,127 @@ const AutomationRobot = ({ currentStep, setupData }) => {
   };
 
   const { message, tip } = getRobotMessage();
+  const completedSteps = Object.values(setupData).filter(Boolean).length;
   
   return (
-    <div className="bg-slate-800 rounded-xl p-6 sticky top-8 shadow-lg">
-      {/* Robot Avatar */}
-      <div className="flex justify-center mb-6">
-        <div className="relative">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#FE8401] to-[#FF9933] rounded-full flex items-center justify-center">
-            <div className="text-white text-3xl">🤖</div>
+    <div className="bg-white/95 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20 transition-all duration-300 hover:shadow-3xl">
+      {/* Header Section */}
+      <div className="text-center mb-8">
+        {/* Modern Avatar */}
+        <div className="relative inline-block mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg transform transition-transform duration-300 hover:scale-105">
+            <div className="text-white text-2xl font-bold">B</div>
           </div>
-          {/* Animated pulse */}
-          <div className="absolute inset-0 w-20 h-20 bg-[#FE8401]/20 rounded-full animate-ping"></div>
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+          </div>
         </div>
+        
+        <h3 className="text-2xl font-bold text-gray-900 mb-1">Blayz</h3>
+        <p className="text-gray-600 text-sm font-medium">AI Campaign Manager</p>
       </div>
       
-      {/* Robot Name */}
-      <div className="text-center mb-6">
-        <h3 className="text-xl font-bold text-white">Blayz Assistant</h3>
-        <p className="text-[#FE8401] text-sm font-medium">Your AI Campaign Manager</p>
-      </div>
-      
-      {/* Message Bubble */}
-      <div className="bg-slate-700 rounded-lg p-4 mb-4 relative">
-        <div className="absolute -top-2 left-6 w-4 h-4 bg-slate-700 transform rotate-45"></div>
-        <p className="text-white text-sm leading-relaxed">
+      {/* Message Card */}
+      <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 mb-6 border border-gray-200/50">
+        <p className="text-gray-800 text-sm leading-relaxed font-medium">
           {message}
         </p>
       </div>
       
-      {/* Tip */}
-      <div className="bg-[#FE8401]/10 border border-[#FE8401]/30 rounded-lg p-3 mb-6">
-        <div className="flex items-start space-x-2">
-          <div className="text-[#FE8401] mt-0.5">💡</div>
-          <p className="text-white/90 text-xs leading-relaxed">
+      {/* Tip Section */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-8 border border-blue-200/30">
+        <div className="flex items-start space-x-3">
+          <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <p className="text-gray-700 text-xs leading-relaxed">
             {tip}
           </p>
         </div>
       </div>
       
-      {/* Progress Summary */}
-      <div className="space-y-2">
-        <h4 className="text-white font-medium text-sm mb-3">Setup Progress</h4>
-        
-        <div className={`flex items-center text-xs ${setupData.selectedCampaign ? 'text-green-400' : 'text-slate-500'}`}>
-          <div className={`w-2 h-2 rounded-full mr-2 ${setupData.selectedCampaign ? 'bg-green-400' : 'bg-slate-500'}`}></div>
-          Campaign: {setupData.selectedCampaign?.name || 'Not selected'}
+      {/* Progress Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-gray-900 font-semibold text-sm">Setup Progress</h4>
+          <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+            {completedSteps}/5
+          </div>
         </div>
         
-        <div className={`flex items-center text-xs ${setupData.companyProfile ? 'text-green-400' : 'text-slate-500'}`}>
-          <div className={`w-2 h-2 rounded-full mr-2 ${setupData.companyProfile ? 'bg-green-400' : 'bg-slate-500'}`}></div>
-          Profile: {setupData.companyProfile?.name || 'Not selected'}
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
+          <div 
+            className="bg-gradient-to-r from-orange-500 to-amber-600 h-2 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${(completedSteps / 5) * 100}%` }}
+          ></div>
         </div>
         
-        <div className={`flex items-center text-xs ${setupData.strategy ? 'text-green-400' : 'text-slate-500'}`}>
-          <div className={`w-2 h-2 rounded-full mr-2 ${setupData.strategy ? 'bg-green-400' : 'bg-slate-500'}`}></div>
-          Strategy: {setupData.strategy?.name || 'Not selected'}
-        </div>
-        
-        <div className={`flex items-center text-xs ${setupData.offer ? 'text-green-400' : 'text-slate-500'}`}>
-          <div className={`w-2 h-2 rounded-full mr-2 ${setupData.offer ? 'bg-green-400' : 'bg-slate-500'}`}></div>
-          Offer: {setupData.offer?.name || 'Not configured'}
-        </div>
-        
-        <div className={`flex items-center text-xs ${setupData.automationFrequency ? 'text-green-400' : 'text-slate-500'}`}>
-          <div className={`w-2 h-2 rounded-full mr-2 ${setupData.automationFrequency ? 'bg-green-400' : 'bg-slate-500'}`}></div>
-          Frequency: {setupData.automationFrequency || 'Not set'}
+        {/* Progress Items */}
+        <div className="space-y-3">
+          {[
+            { key: 'selectedCampaign', label: 'Campaign', value: setupData.selectedCampaign?.name },
+            { key: 'companyProfile', label: 'Profile', value: setupData.companyProfile?.name },
+            { key: 'strategy', label: 'Strategy', value: setupData.strategy?.name },
+            { key: 'offer', label: 'Offer', value: setupData.offer?.name },
+            { key: 'launch', label: 'Launch', value: currentStep === 5 ? 'Ready' : null }
+          ].map((item, index) => {
+            const isCompleted = setupData[item.key];
+            return (
+              <div key={item.key} className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                isCompleted ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
+              }`}>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 ${
+                  isCompleted ? 'bg-green-500' : 'bg-gray-300'
+                }`}>
+                  {isCompleted ? (
+                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <div className={`text-xs font-medium ${
+                    isCompleted ? 'text-green-800' : 'text-gray-600'
+                  }`}>
+                    {item.label}
+                  </div>
+                  <div className={`text-xs ${
+                    isCompleted ? 'text-green-600' : 'text-gray-400'
+                  }`}>
+                    {item.value || 'Not configured'}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
       
-      {/* Next Action */}
+      {/* Action Section */}
       {currentStep < 5 && (
-        <div className="mt-4 pt-4 border-t border-slate-700">
-          <p className="text-slate-400 text-xs text-center">
-            Complete this step to continue →
-          </p>
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="text-center">
+            <div className="inline-flex items-center space-x-2 text-gray-500 text-xs">
+              <span>Complete this step to continue</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </div>
         </div>
       )}
       
-      {currentStep === 5 && Object.values(setupData).filter(Boolean).length === 5 && (
-        <div className="mt-4 pt-4 border-t border-slate-700">
-          <div className="text-center">
-            <div className="text-green-400 text-sm font-medium">🎉 Ready to Launch!</div>
-            <p className="text-slate-400 text-xs mt-1">
-              Your automation is configured and ready to go.
+      {currentStep === 5 && (
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+            <div className="text-green-600 text-lg font-semibold mb-1">🎉 Ready to Launch!</div>
+            <p className="text-green-700 text-xs">
+              Your automation is fully configured and ready to optimize your campaigns.
             </p>
           </div>
         </div>

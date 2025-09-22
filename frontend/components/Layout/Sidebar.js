@@ -7,10 +7,12 @@ const Sidebar = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
   
 
   
   useEffect(() => {
+    setIsClient(true);
     // 'supabase' is now the client instance, no need to call getSupabaseClient()
     // const supabase = getSupabaseClient(); // This line is removed/changed
     const fetchUser = async () => {
@@ -71,30 +73,11 @@ const Sidebar = () => {
 
   const navItems = [
     {
-      name: 'Full Automation Setup',
-      href: '/automation-setup',
+      name: 'Assistant Dashboard',
+      href: '/assistant-dashboard',
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Strategy Builder',
-      href: '/strategy-setup',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-      ),
-    },
-    {
-      name: 'Reports',
-      href: '/reports',
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
         </svg>
       ),
     },
@@ -159,22 +142,24 @@ const Sidebar = () => {
         {/* Navigation Section */}
         <div className="flex-1 flex flex-col pt-6 pb-6 overflow-y-auto">
           <div className="flex-1 px-4 space-y-3">
-            {navItems.map((item) => (
-              <Link key={item.name} href={item.href} legacyBehavior>
-                <a
-                  className={`${
-                    router.pathname.startsWith(item.href)
-                      ? 'bg-white/20 text-white shadow-md'
-                      : 'text-white/90 hover:bg-white/10 hover:text-white hover:shadow-sm'
-                  } group flex items-center px-4 py-4 h-15 text-base font-medium rounded-md transition-colors duration-200`}
-                >
-                  <span className={`mr-4 h-7 w-7 transition-colors duration-200 ${router.pathname.startsWith(item.href) ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
-                    {item.icon}
-                  </span>
-                  <span className="font-medium">{item.name}</span>
-                </a>
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = isClient && router.pathname.startsWith(item.href);
+              return (
+                <Link key={item.name} href={item.href} legacyBehavior>
+                  <a
+                    className={`${isActive
+                        ? 'bg-white/20 text-white shadow-md'
+                        : 'text-white/90 hover:bg-white/10 hover:text-white hover:shadow-sm'
+                      } group flex items-center px-4 py-4 h-15 text-base font-medium rounded-md transition-colors duration-200`}
+                  >
+                    <span className={`mr-4 h-7 w-7 transition-colors duration-200 ${isActive ? 'text-white' : 'text-white/80 group-hover:text-white'}`}>
+                      {item.icon}
+                    </span>
+                    <span className="font-medium">{item.name}</span>
+                  </a>
+                </Link>
+              );
+            })}
           </div>
         </div>
         

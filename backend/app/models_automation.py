@@ -34,7 +34,6 @@ class AutomationSetup(BaseModel):
     campaign_id: str
     campaign_name: str
     company_profile_id: str
-    strategy_id: str
     offer_id: str
     automation_frequency: AutomationFrequency
     custom_settings: Dict[str, Any] = {}
@@ -157,7 +156,6 @@ class AutomationSetupRequest(BaseModel):
     campaign_id: str
     campaign_name: str
     company_profile_id: str
-    strategy_id: str
     offer_id: str
     automation_frequency: AutomationFrequency
     custom_settings: Dict[str, Any] = {}

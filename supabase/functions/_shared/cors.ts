@@ -9,7 +9,8 @@ export function getCorsHeaders(origin: string | null) {
 
   const allowedOrigins = [
     Deno.env.get("APP_ORIGIN") || "https://www.blayz.io",
-    // Add more allowed origins here if needed, e.g. 'http://localhost:3000'
+    "http://localhost:3002",
+    "http://localhost:3000"
   ];
 
   if (origin && allowedOrigins.some(allowed => origin === allowed)) {
@@ -25,4 +26,4 @@ export function getCorsHeaders(origin: string | null) {
 
 export function getTestMessage() {
   return "Shared module loaded successfully!";
-} 
+}

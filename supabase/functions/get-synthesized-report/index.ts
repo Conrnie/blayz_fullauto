@@ -1,27 +1,21 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
-import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from '../_shared/cors.ts';
-
-// Define a more specific type for Supabase insights if possible, using Record<string, any> as a generic placeholder
-type InsightRecord = Record<string, any>;
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+// 1. Import the new dynamic header function
+import { getCorsHeaders } from '../_shared/cors.ts';
 
 // --- AI Provider Configuration ---
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY") ?? "";
-// --- DEBUG LINE ---
-console.log(`[synthesize-report][DEBUG] Read GEMINI_API_KEY length: ${GEMINI_API_KEY.length}`); // Check if length > 0
-// --- END DEBUG LINE ---
 const CHUTES_API_TOKEN = Deno.env.get("CHUTES_API_TOKEN") ?? "";
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${GEMINI_API_KEY}`; // Using 1.5 Pro latest
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${GEMINI_API_KEY}`;
 const CHUTES_API_URL = 'https://llm.chutes.ai/v1/chat/completions';
 
-// Define models
-const GEMINI_MODEL = "gemini-2.5-pro-preview-03-25"; // Use the model name in the URL path
-const CHUTES_DEEPSEEK_MODEL = 'tngtech/DeepSeek-R1T-Chimera'; // Note: This might be deprecated, check Chutes docs if needed
+// --- Shared Secret for Internal Edge Function Calls ---
+const EXPECTED_SHARED_SECRET = Deno.env.get('YOUR_SHARED_SECRET') ?? "";
 
 // --- Supabase Client ---
-let supabaseAdminInstance: SupabaseClient | null = null;
+let supabaseAdminInstance = null;
 
-function getSupabaseAdminClient(): SupabaseClient {
+function getSupabaseAdminClient() {
   if (supabaseAdminInstance) {
     return supabaseAdminInstance;
   }
@@ -34,6 +28,46 @@ function getSupabaseAdminClient(): SupabaseClient {
   console.log("[synthesize-report][LOG] Initializing Supabase client with Service Role Key.");
   supabaseAdminInstance = createClient(supabaseUrl, supabaseServiceKey);
   return supabaseAdminInstance;
+}
+
+// --- Helper function to calculate date range ---
+function calculateDateRange(daysBack = 90) {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - daysBack);
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0] // YYYY-MM-DD format
+  };
+}
+
+// --- Internal Edge Function Calls ---
+async function callInternalEdgeFunction(functionName, payload) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const edgeUrl = `${supabaseUrl}/functions/v1/${functionName}`;
+  try {
+    console.log(`[synthesize-report][LOG] Calling internal function: ${functionName}`);
+    const response = await fetch(edgeUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shared-Secret': EXPECTED_SHARED_SECRET
+      },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`${functionName} failed with status ${response.status}: ${errorText}`);
+    }
+    const result = await response.json();
+    console.log(`[synthesize-report][LOG] ${functionName} completed successfully`);
+    return result;
+  } catch (error) {
+    console.error(`[synthesize-report][ERROR] ${functionName} failed:`, error);
+    return {
+      error: error.message
+    };
+  }
 }
 
 // --- AI Call Logic with Fallback ---
@@ -183,14 +217,19 @@ function formatDateRangeForPrompt(endDate: Date, days: number): string {
 // --- Main Handler ---
 serve(async (req: Request) => {
   console.log(`[synthesize-report] Function called with method: ${req.method}`);
+  
+  // Get dynamic CORS headers based on request origin
+  const origin = req.headers.get('origin');
+  const dynamicCorsHeaders = getCorsHeaders(origin);
+  
   if (req.method === 'OPTIONS') {
     console.log("[synthesize-report][CORS] OPTIONS request received.");
-    console.log("[synthesize-report][CORS] Returning with headers:", JSON.stringify(corsHeaders));
-    return new Response('ok', { headers: corsHeaders });
+    console.log("[synthesize-report][CORS] Returning with headers:", JSON.stringify(dynamicCorsHeaders));
+    return new Response('ok', { headers: dynamicCorsHeaders });
   }
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method Not Allowed' }), {
-      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 405, headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' }
     });
   }
 
@@ -233,7 +272,7 @@ serve(async (req: Request) => {
     }), {
       status: 400,
       headers: {
-        ...corsHeaders,
+        ...dynamicCorsHeaders,
         'Content-Type': 'application/json'
       }
     });
@@ -407,7 +446,7 @@ Synthesize the reports from your three AI agents, considering their unique analy
     if ('error' in aiResult) {
       console.error(`[synthesize-report][ERROR] Final AI synthesis failed: ${aiResult.error}. Details: ${aiResult.details}`);
       return new Response(JSON.stringify({ error: aiResult.error, details: aiResult.details }), {
-        status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 502, headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
@@ -434,7 +473,7 @@ Synthesize the reports from your three AI agents, considering their unique analy
       console.error("[synthesize-report][ERROR] Failed to parse or validate the cleaned AI analysis JSON:", parseError);
       console.error("[synthesize-report][DEBUG] Cleaned AI Output that failed parsing:", aiResult.analysis);
       return new Response(JSON.stringify({ error: "AI analysis could not be parsed as valid JSON after cleaning", details: parseError.message, cleaned_ai_output: aiResult.analysis }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
@@ -459,13 +498,13 @@ Synthesize the reports from your three AI agents, considering their unique analy
     if (insertError) {
       console.error("[synthesize-report][ERROR] Failed to insert report into database:", insertError);
       return new Response(JSON.stringify({ error: "Failed to save report to database", details: insertError.message }), {
-        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 500, headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' }
       });
     }
     console.log("[synthesize-report][LOG] Report successfully saved to database.");
 
     return new Response(JSON.stringify({ synthesizedReport: reportJson }), {
-      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status: 200, headers: { ...dynamicCorsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
@@ -476,4 +515,4 @@ Synthesize the reports from your three AI agents, considering their unique analy
   }
 });
 
-console.log('[synthesize-report] Function script loaded.') 
+console.log('[synthesize-report] Function script loaded.')

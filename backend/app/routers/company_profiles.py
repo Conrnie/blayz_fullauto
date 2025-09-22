@@ -58,8 +58,6 @@ async def create_company_profile(
     """
     Create a new company profile by calling the n8n webhook
     """
-    logger.info("=== CREATE COMPANY PROFILE ENDPOINT STARTING ===")
-    
     try:
         # Extract user info from JWT token
         auth_header = current_request.headers.get("authorization")
@@ -69,9 +67,6 @@ async def create_company_profile(
         token = auth_header.split(" ")[1]
         user = validate_token(token)  # Remove await - validate_token is not async
         user_id = user.get("id")
-        
-        logger.info(f"Creating company profile for user: {user_id}")
-        logger.info(f"Company: {request.company_name}, Website: {request.website_url}")
         
         # Validate and format the URL
         try:
@@ -98,8 +93,6 @@ async def create_company_profile(
         
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to create profile record")
-        
-        logger.info(f"Created profile record with ID: {profile_id}")
         
         # Update status to processing
         supabase.table('company_profiles').update({
@@ -221,8 +214,6 @@ async def list_company_profiles(current_request: Request):
     List company profiles for the current user
     """
     try:
-        logger.info("=== COMPANY PROFILES ENDPOINT STARTING ===")
-        
         auth_header = current_request.headers.get("authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="Missing or invalid authorization header")
@@ -230,33 +221,25 @@ async def list_company_profiles(current_request: Request):
         token = auth_header.split(" ")[1]
         user = validate_token(token)
         user_id = user.get("id")
-
-        logger.info(f"Fetching company profiles for user: {user_id}")
         
         # Query the database for company profiles
-        logger.info("Getting database connection")
         supabase = get_db()
         
-        logger.info("Executing database query")
         try:
             result = supabase.table('company_profiles').select('*').eq('blayz_user_id', user_id).order('created_at', desc=True).execute()
         except Exception as db_error:
             logger.error(f"Database query exception: {str(db_error)}")
             raise HTTPException(status_code=500, detail=f"Database query failed: {str(db_error)}")
         
-        logger.info(f"Database query executed, result: {result}")
         if hasattr(result, 'error') and result.error:
             logger.error(f"Database query failed: {result.error}")
             raise HTTPException(status_code=500, detail=f"Database query failed: {result.error}")
-
-        logger.info(f"Database query result: {len(result.data) if result.data else 0} profiles found")
         
         # Transform the data for the response using the new status column
         profiles = []
         
         if result.data:
             for profile in result.data:
-                logger.info(f"Processing profile: {profile.get('profile_id', 'unknown')}")
                 try:
                     # Handle general_summary safely - it can be None, a string, or a dict
                     general_summary = profile.get('general_summary', {})
@@ -293,16 +276,11 @@ async def list_company_profiles(current_request: Request):
                     # Continue processing other profiles
                     continue
         
-        logger.info(f"Successfully processed {len(profiles)} company profiles for user {user_id}")
-        
-        response_data = {
+        return {
             "success": True,
             "profiles": profiles,
             "message": f"Successfully fetched {len(profiles)} company profiles"
         }
-        
-        logger.info(f"Returning response: {response_data}")
-        return response_data
         
     except HTTPException as http_exc:
         logger.error(f"HTTP Exception in company profiles endpoint: {http_exc}")
@@ -467,4 +445,4 @@ async def associate_campaign_with_profile(
         raise
     except Exception as e:
         logger.error(f"Unexpected error associating profile: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail="An unexpected error occurred.") 
+        raise HTTPException(status_code=500, detail="An unexpected error occurred.")

@@ -170,7 +170,6 @@ class MetaAPIService:
                 }
             ]
             
-            logger.info(f"Retrieved {len(mock_creatives)} ad creatives for campaign {campaign_id}")
             return mock_creatives
             
         except Exception as e:

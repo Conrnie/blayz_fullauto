@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, TextField, Alert, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import { supabase } from '../lib/supabase';
+import supabase from '../lib/supabase';
 
 export default function AuthWrapper({ children }) {
   const [user, setUser] = useState(null);
@@ -253,10 +253,10 @@ export default function AuthWrapper({ children }) {
               Creative Demo
             </a>
             <a 
-              href="/automation-setup" 
+              href="/setup-assistant" 
               className="text-slate-300 hover:text-[#FE8401] text-sm"
             >
-              Automation
+              Setup Assistant
             </a>
             <Button
               variant="outlined"

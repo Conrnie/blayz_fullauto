@@ -36,9 +36,9 @@ class DatabaseService:
             query = """
                 INSERT INTO automation_setups 
                 (id, user_id, campaign_id, campaign_name, company_profile_id, 
-                 strategy_id, offer_id, automation_frequency, custom_settings, 
+                 offer_id, automation_frequency, custom_settings, 
                  status, created_at, updated_at)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                 RETURNING id
                 """
             
@@ -49,7 +49,6 @@ class DatabaseService:
                     setup.campaign_id,
                     setup.campaign_name,
                     setup.company_profile_id,
-                    setup.strategy_id,
                     setup.offer_id,
                     setup.automation_frequency.value,
                     json.dumps(setup.custom_settings),

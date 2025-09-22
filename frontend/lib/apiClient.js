@@ -71,12 +71,12 @@ export async function fetchWithAuth(url, options = {}) {
 
 // Company Profiles API functions
 export async function createCompanyProfile(companyName, websiteUrl) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+  const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
   
   console.log('[API Client] Creating company profile:', { companyName, websiteUrl });
-  console.log('[API Client] Backend URL:', backendUrl);
+  console.log('[API Client] Frontend URL:', frontendUrl);
   
-  const result = await fetchWithAuth(`${backendUrl}/api/company-profiles`, {
+  const result = await fetchWithAuth(`${frontendUrl}/api/company-profiles`, {
     method: 'POST',
     body: JSON.stringify({ company_name: companyName, website_url: websiteUrl })
   });
@@ -95,23 +95,23 @@ export async function associateProfileToCampaign(campaignId, profileId) {
 }
 
 export async function getCompanyProfiles() {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+  const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
   
-  return fetchWithAuth(`${backendUrl}/api/company-profiles/`);
+  return fetchWithAuth(`${frontendUrl}/api/company-profiles`);
 }
 
 export async function deleteCompanyProfile(profileId) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+  const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
   
-  return fetchWithAuth(`${backendUrl}/api/company-profiles/${profileId}`, {
+  return fetchWithAuth(`${frontendUrl}/api/company-profiles/${profileId}`, {
     method: 'DELETE'
   });
 }
 
 export async function getCompanyProfile(profileId) {
-  const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+  const frontendUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3002';
   
-  return fetchWithAuth(`${backendUrl}/api/company-profiles/${profileId}`, {
+  return fetchWithAuth(`${frontendUrl}/api/company-profiles/${profileId}`, {
     method: 'GET'
   });
 }

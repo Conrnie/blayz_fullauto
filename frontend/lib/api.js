@@ -4,8 +4,8 @@ import { fetchWithAuth } from './apiClient.js';
 export const metaApi = {
   async getAdAccounts() {
     try {
-      const response = await fetchWithAuth('/api/meta/ad-accounts');
-      return response.data || [];
+      const response = await fetchWithAuth('/api/ad-accounts');
+      return response || [];
     } catch (error) {
       console.error('Error fetching ad accounts:', error);
       throw error;
@@ -14,8 +14,8 @@ export const metaApi = {
 
   async getCampaigns(adAccountId, limit = 25) {
     try {
-      const response = await fetchWithAuth(`/api/meta/campaigns?ad_account_id=${adAccountId}&limit=${limit}`);
-      return response.data || [];
+      const response = await fetchWithAuth(`/api/campaigns?ad_account_id=${adAccountId}&limit=${limit}`);
+      return response || [];
     } catch (error) {
       console.error('Error fetching campaigns:', error);
       throw error;
@@ -39,4 +39,4 @@ export const insightsApi = {
       throw error;
     }
   }
-}; 
+};
