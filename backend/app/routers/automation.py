@@ -38,7 +38,6 @@ async def create_automation_setup(
             campaign_id=setup_request.campaign_id,
             campaign_name=setup_request.campaign_name,
             company_profile_id=setup_request.company_profile_id,
-            strategy_id=setup_request.strategy_id,
             offer_id=setup_request.offer_id,
             automation_frequency=setup_request.automation_frequency,
             custom_settings=setup_request.custom_settings,

@@ -307,9 +307,22 @@ margin-bottom: 1rem;
 }
 
 .input-field:focus {
-outline: none;
-border-color: var(--color-primary);
-box-shadow: 0 0 0 3px rgba(254, 132, 1, 0.1);
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(254, 132, 1, 0.1);
+}
+
+/* Override Tailwind Forms plugin default focus styles */
+input:focus,
+select:focus,
+textarea:focus {
+  --tw-ring-color: rgb(254 132 1 / 0.5) !important;
+  border-color: rgb(254 132 1) !important;
+}
+
+/* Specific override for focus border colors */
+.focus\:border-orange-500:focus {
+  border-color: rgb(254 132 1) !important;
 }
 
 .form-label {
@@ -429,4 +442,3 @@ transform: translateY(-1px);
 box-shadow: 0 0 10px 3px rgba(255, 255, 255, 0.25);
 transition: all 0.2s ease;
 }
-*/

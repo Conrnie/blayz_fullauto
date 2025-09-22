@@ -103,13 +103,13 @@ const OfferSetup = ({ onComplete, offerData }) => {
         {/* Lead Magnet Format (if applicable) */}
         {formData.offerType === 'lead_magnet' && (
           <div>
-            <label className="block text-white font-medium mb-2">
+            <label className="block text-gray-900 font-medium mb-2">
               Lead Magnet Format
             </label>
             <select
               value={formData.leadMagnetFormat}
               onChange={(e) => handleInputChange('leadMagnetFormat', e.target.value)}
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 focus:border-orange-500 focus:outline-none"
             >
               <option value="pdf">PDF Guide</option>
               <option value="checklist">Checklist</option>
@@ -144,14 +144,14 @@ const OfferSetup = ({ onComplete, offerData }) => {
             value={formData.valueProposition}
             onChange={(e) => handleInputChange('valueProposition', e.target.value)}
             placeholder="e.g., Get 10x more leads in 30 days or less"
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-purple-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:outline-none"
           />
         </div>
         
         {/* Traffic Destination Setup */}
         <div>
           <label className="block text-gray-900 font-medium mb-3">
-            Where should I send traffic from your ads? *
+            How do you capture leads? *
           </label>
           
           <div className="space-y-3 mb-4">
@@ -195,7 +195,7 @@ const OfferSetup = ({ onComplete, offerData }) => {
                 value={formData.landingPageUrl}
                 onChange={(e) => handleInputChange('landingPageUrl', e.target.value)}
                 placeholder="https://yoursite.com/landing-page"
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:border-purple-500 focus:outline-none"
+                className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:border-orange-500 focus:outline-none"
               />
             </div>
           )}
@@ -209,7 +209,7 @@ const OfferSetup = ({ onComplete, offerData }) => {
             className={`
               w-full py-4 rounded-lg font-medium transition-all
               ${isFormValid
-                ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                ? 'bg-orange-500 hover:bg-orange-600 text-white'
                 : 'bg-slate-700 text-slate-500 cursor-not-allowed'
               }
             `}

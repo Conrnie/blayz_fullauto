@@ -3,7 +3,7 @@ import Layout from '../components/Layout/Layout';
 import CampaignSelector from '../components/Assistant/CampaignSelector';
 import CompanyProfileSelector from '../components/Assistant/CompanyProfileSelector';
 import AvatarSelector from '../components/Assistant/AvatarSelector';
-import StrategySelector from '../components/Assistant/StrategySelector';
+
 import OfferSetup from '../components/Assistant/OfferSetup';
 import AutomationRobot from '../components/Assistant/AutomationRobot';
 import { metaApi } from '../lib/api';
@@ -18,7 +18,6 @@ export default function SetupAssistant() {
     campaign: null,
     companyProfile: null,
     avatar: null,
-    strategy: null,
     offer: null,
     assistantName: ''
   });
@@ -31,10 +30,9 @@ export default function SetupAssistant() {
   const steps = [
     { id: 1, title: 'Select Campaign', icon: '🎯', description: 'Choose your ad account and campaign' },
     { id: 2, title: 'Define Persona', icon: '🏢', description: 'Set up your company information and target avatar' },
-    { id: 3, title: 'Set Strategy', icon: '📋', description: 'Define your automation strategy and frequency' },
-    { id: 4, title: 'Create Offer', icon: '💰', description: 'Configure your offer details' },
-    { id: 5, title: 'Name Assistant', icon: '✏️', description: 'Give your AI assistant a custom name' },
-    { id: 6, title: 'Launch', icon: '🚀', description: 'Review and launch your assistant' }
+    { id: 3, title: 'Create Offer', icon: '💰', description: 'Configure your offer details' },
+    { id: 4, title: 'Name Assistant', icon: '✏️', description: 'Give your AI assistant a custom name' },
+    { id: 5, title: 'Launch', icon: '🚀', description: 'Review and launch your assistant' }
   ];
 
   // Fetch ad accounts on component mount
@@ -115,17 +113,12 @@ export default function SetupAssistant() {
     }
     
     // Check if step 3 requirements are met
-    if (currentStep === 3 && !setupData.strategy) {
-      return; // Don't proceed if strategy not selected
-    }
-    
-    // Check if step 4 requirements are met
-    if (currentStep === 4 && !setupData.offer) {
+    if (currentStep === 3 && !setupData.offer) {
       return; // Don't proceed if offer not configured
     }
     
-    // Check if step 5 requirements are met
-    if (currentStep === 5 && !setupData.assistantName.trim()) {
+    // Check if step 4 requirements are met
+    if (currentStep === 4 && !setupData.assistantName.trim()) {
       return; // Don't proceed if assistant name not provided
     }
     
@@ -173,16 +166,14 @@ export default function SetupAssistant() {
         user_id: user.id,
         name: setupData.assistantName || `${setupData.campaign?.name || 'Campaign'} Assistant`,
         description: `AI advisor for ${setupData.campaign?.name || 'your campaign'} optimization`,
-        system_prompt: `You are an AI campaign optimization advisor for ${setupData.companyProfile?.name || 'the user\'s company'}. Your role is to analyze campaign performance and provide actionable recommendations for ${setupData.campaign?.name || 'the campaign'}. Focus on ${setupData.strategy?.name || 'optimization'} strategies and consider the target avatar: ${setupData.avatar?.name || 'general audience'}.`,
+        system_prompt: `You are an AI campaign optimization advisor for ${setupData.companyProfile?.name || 'the user\'s company'}. Your role is to analyze campaign performance and provide actionable recommendations for ${setupData.campaign?.name || 'the campaign'}. Focus on optimization strategies and consider the target avatar: ${setupData.avatar?.name || 'general audience'}.`,
         // New dedicated columns for better data management
         campaign_id: setupData.campaign?.id,
         company_profile_id: setupData.companyProfile?.id,
         meta_campaign_id: setupData.campaign?.meta_campaign_id,
         ad_account_id: setupData.adAccount?.id,
-        strategy_id: setupData.strategy?.id,
         model_config: {
           // Keep essential context objects for AI reasoning
-          strategy: setupData.strategy,
           offer: setupData.offer,
           avatar: setupData.avatar,
           campaign: setupData.campaign,
@@ -473,29 +464,18 @@ export default function SetupAssistant() {
                      
                      {currentStep === 3 && (
                        <div className="space-y-6">
-                         <StrategySelector 
-                           onSelect={(strategy) => {
-                             setSetupData(prev => ({ ...prev, strategy }));
-                           }}
-                           selectedStrategy={setupData.strategy}
-                         />
-                       </div>
-                     )}
-                     
-                     {currentStep === 4 && (
-                       <div className="space-y-6">
                          <OfferSetup 
                            onComplete={(offer) => {
                              setSetupData(prev => ({ ...prev, offer }));
                              // Automatically advance to name setup section
-                             setCurrentStep(5);
+                             setCurrentStep(4);
                            }}
                            offerData={setupData.offer}
                          />
                        </div>
                      )}
                      
-                     {currentStep === 5 && (
+                     {currentStep === 4 && (
                        <div className="space-y-6">
                          {/* Assistant Name Setup */}
                          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -523,7 +503,7 @@ export default function SetupAssistant() {
                        </div>
                      )}
                      
-                     {currentStep === 6 && (
+                     {currentStep === 5 && (
                        <div className="space-y-6">
                          {/* Automation Overview Section */}
                          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -547,13 +527,7 @@ export default function SetupAssistant() {
                                <p className="text-sm text-gray-600">Avatar: Scaling In-House Marketing Manager</p>
                              </div>
                              
-                             {/* Strategy */}
-                             <div>
-                               <h4 className="font-semibold text-gray-900 mb-2">Strategy</h4>
-                               <p className="font-medium text-gray-800">Conservative Scaler</p>
-                               <p className="text-sm text-gray-600 mb-2">Gradual scaling approach for stable, long-term campaign growth</p>
-                               <p className="text-sm text-gray-600">Every 6 Hours</p>
-                             </div>
+
                              
                              {/* Offer */}
                              <div>

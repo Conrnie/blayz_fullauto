@@ -16,6 +16,7 @@ export default function AssistantDashboard() {
   const [selectedAssistant, setSelectedAssistant] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   useEffect(() => {
     console.log('=== ASSISTANT DASHBOARD DEBUG ===');
@@ -65,6 +66,45 @@ export default function AssistantDashboard() {
     } finally {
       setIsLoading(false);
       console.log('Loading state set to false');
+    }
+  };
+
+  const deleteAssistant = async (assistantId) => {
+    try {
+      // First, delete all related conversations
+      const { error: conversationsError } = await supabase
+        .from('assistant_conversations')
+        .delete()
+        .eq('assistant_id', assistantId);
+
+      if (conversationsError) {
+        console.error('Error deleting conversations:', conversationsError);
+        alert('Failed to delete assistant conversations. Please try again.');
+        return;
+      }
+
+      // Then delete the assistant
+      const { error: assistantError } = await supabase
+        .from('ai_assistants')
+        .delete()
+        .eq('id', assistantId)
+        .eq('user_id', user.id); // Ensure user can only delete their own assistants
+
+      if (assistantError) {
+        console.error('Error deleting assistant:', assistantError);
+        alert('Failed to delete assistant. Please try again.');
+        return;
+      }
+
+      // Update local state
+      setAssistants(prev => prev.filter(assistant => assistant.id !== assistantId));
+      setDeleteConfirm(null);
+      
+      // Show success message
+      alert('Assistant deleted successfully!');
+    } catch (error) {
+      console.error('Unexpected error deleting assistant:', error);
+      alert('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -119,6 +159,8 @@ export default function AssistantDashboard() {
     }
   };
 
+
+
   // Show chat interface if an assistant is selected
   if (selectedAssistant && selectedConversation) {
     return (
@@ -144,6 +186,8 @@ export default function AssistantDashboard() {
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           Manage your AI assistants and create specialized helpers for different aspects of your Meta advertising campaigns.
         </p>
+        
+
       </div>
 
       {isLoading ? (
@@ -203,9 +247,20 @@ export default function AssistantDashboard() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                    Active
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                      Active
+                    </span>
+                    <button
+                      onClick={() => setDeleteConfirm(assistant.id)}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors duration-200"
+                      title="Delete Assistant"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{assistant.name}</h3>
@@ -226,6 +281,39 @@ export default function AssistantDashboard() {
                 </button>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Assistant</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this assistant? This action cannot be undone and will also delete all associated conversations.
+              </p>
+              <div className="flex space-x-4">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteAssistant(deleteConfirm)}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors duration-200"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

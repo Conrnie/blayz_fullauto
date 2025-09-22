@@ -3,7 +3,7 @@ import Layout from '../components/Layout/Layout';
 import CampaignSelector from '../components/Assistant/CampaignSelector';
 import CompanyProfileSelector from '../components/Assistant/CompanyProfileSelector';
 import AvatarSelector from '../components/Assistant/AvatarSelector';
-import StrategySelector from '../components/Assistant/StrategySelector';
+
 import OfferSetup from '../components/Assistant/OfferSetup';
 import AutomationRobot from '../components/Assistant/AutomationRobot';
 import { metaApi } from '../lib/api';
@@ -26,9 +26,8 @@ export default function AutomationSetup() {
   const steps = [
     { id: 1, title: 'Select Ad Account & Campaign', icon: '🎯', description: 'Choose your ad account and campaign' },
     { id: 2, title: 'Company Profile & Avatar', icon: '🏢', description: 'Set up your company information and target avatar' },
-    { id: 3, title: 'Choose Strategy & Frequency', icon: '📋', description: 'Define your automation strategy and frequency' },
-    { id: 4, title: 'Setup Offer', icon: '💰', description: 'Configure your offer details' },
-    { id: 5, title: 'Launch Automation', icon: '🚀', description: 'Review and launch your automation' }
+    { id: 3, title: 'Setup Offer', icon: '💰', description: 'Configure your offer details' },
+    { id: 4, title: 'Launch Automation', icon: '🚀', description: 'Review and launch your automation' }
   ];
 
   // Fetch ad accounts on component mount
@@ -109,12 +108,7 @@ export default function AutomationSetup() {
     }
     
     // Check if step 3 requirements are met
-    if (currentStep === 3 && !setupData.strategy) {
-      return; // Don't proceed if strategy not selected
-    }
-    
-    // Check if step 4 requirements are met
-    if (currentStep === 4 && !setupData.offer) {
+    if (currentStep === 3 && !setupData.offer) {
       return; // Don't proceed if offer not configured
     }
     
@@ -333,31 +327,22 @@ export default function AutomationSetup() {
                        </div>
                      )}
                      
-                     {currentStep === 3 && (
-                       <div className="space-y-6">
-                         <StrategySelector 
-                           onSelect={(strategy) => {
-                             setSetupData(prev => ({ ...prev, strategy }));
-                           }}
-                           selectedStrategy={setupData.strategy}
-                         />
-                       </div>
-                     )}
+
                      
-                     {currentStep === 4 && (
+                     {currentStep === 3 && (
                        <div className="space-y-6">
                          <OfferSetup 
                            onComplete={(offer) => {
                              setSetupData(prev => ({ ...prev, offer }));
                              // Automatically advance to launch section
-                             setCurrentStep(5);
+                             setCurrentStep(4);
                            }}
                            offerData={setupData.offer}
                          />
                        </div>
                      )}
                      
-                     {currentStep === 5 && (
+                     {currentStep === 4 && (
                        <div className="space-y-6">
                          {/* Automation Overview Section */}
                          <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -481,14 +466,12 @@ export default function AutomationSetup() {
                   disabled={currentStep === steps.length || 
                     (currentStep === 1 && (!setupData.adAccount || !setupData.campaign)) || 
                     (currentStep === 2 && (!setupData.companyProfile || !setupData.avatar)) ||
-                    (currentStep === 3 && !setupData.strategy) ||
-                    (currentStep === 4 && !setupData.offer)}
+                    (currentStep === 3 && !setupData.offer)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium ${
                     currentStep === steps.length || 
                     (currentStep === 1 && (!setupData.adAccount || !setupData.campaign)) || 
                     (currentStep === 2 && (!setupData.companyProfile || !setupData.avatar)) ||
-                    (currentStep === 3 && !setupData.strategy) ||
-                    (currentStep === 4 && !setupData.offer)
+                    (currentStep === 3 && !setupData.offer)
                       ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                       : 'bg-orange-500 text-white hover:bg-orange-600'
                   }`}

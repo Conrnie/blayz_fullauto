@@ -108,7 +108,7 @@ const AvatarSelector = ({ companyProfileId, onSelect, selectedAvatar }) => {
         Select Target Avatar
       </h3>
       <p className="text-gray-600 mb-6 text-sm">
-        Choose the customer avatar you want to target with this automation. This helps create more personalized and effective campaigns.
+        Choose the customer avatar you are targeting with this campaign.
       </p>
       
       {avatars.length === 0 ? (

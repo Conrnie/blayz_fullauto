@@ -15,15 +15,10 @@ const AutomationRobot = ({ currentStep, setupData }) => {
         };
       case 3:
         return {
-          message: "Perfect! Time to choose your automation strategy. This determines how I'll optimize your campaigns.",
-          tip: "Different strategies work better for different business goals and campaign types."
-        };
-      case 4:
-        return {
           message: "Final step! Tell me about your offer and landing page so I can create compelling ads.",
           tip: "Clear offer details help me generate high-converting ad creatives and copy."
         };
-      case 5:
+      case 4:
         return {
           message: "Excellent! Your automation is fully configured. Review everything and launch when ready!",
           tip: "Once launched, I'll start optimizing your campaigns 24/7 with real-time adjustments."
@@ -83,7 +78,7 @@ const AutomationRobot = ({ currentStep, setupData }) => {
         <div className="flex items-center justify-between mb-4">
           <h4 className="text-gray-900 font-semibold text-sm">Setup Progress</h4>
           <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-            {completedSteps}/5
+            {completedSteps}/4
           </div>
         </div>
         
@@ -91,7 +86,7 @@ const AutomationRobot = ({ currentStep, setupData }) => {
         <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
           <div 
             className="bg-gradient-to-r from-orange-500 to-amber-600 h-2 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${(completedSteps / 5) * 100}%` }}
+            style={{ width: `${(completedSteps / 4) * 100}%` }}
           ></div>
         </div>
         
@@ -100,9 +95,8 @@ const AutomationRobot = ({ currentStep, setupData }) => {
           {[
             { key: 'selectedCampaign', label: 'Campaign', value: setupData.selectedCampaign?.name },
             { key: 'companyProfile', label: 'Profile', value: setupData.companyProfile?.name },
-            { key: 'strategy', label: 'Strategy', value: setupData.strategy?.name },
             { key: 'offer', label: 'Offer', value: setupData.offer?.name },
-            { key: 'launch', label: 'Launch', value: currentStep === 5 ? 'Ready' : null }
+            { key: 'launch', label: 'Launch', value: currentStep === 4 ? 'Ready' : null }
           ].map((item, index) => {
             const isCompleted = setupData[item.key];
             return (
@@ -139,7 +133,7 @@ const AutomationRobot = ({ currentStep, setupData }) => {
       </div>
       
       {/* Action Section */}
-      {currentStep < 5 && (
+      {currentStep < 4 && (
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="text-center">
             <div className="inline-flex items-center space-x-2 text-gray-500 text-xs">
@@ -152,7 +146,7 @@ const AutomationRobot = ({ currentStep, setupData }) => {
         </div>
       )}
       
-      {currentStep === 5 && (
+      {currentStep === 4 && (
         <div className="mt-8 pt-6 border-t border-gray-200">
           <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
             <div className="text-green-600 text-lg font-semibold mb-1">🎉 Ready to Launch!</div>

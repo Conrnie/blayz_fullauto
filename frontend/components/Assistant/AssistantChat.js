@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import supabase from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import ReportView from './ReportView';
+import CreativeGenerationModal from '../CreativeGenerationModal';
 
 const AssistantChat = ({ assistant, conversation, onClose }) => {
   const { user } = useAuth();
@@ -9,6 +10,7 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
+  const [isGeneratingCreatives, setIsGeneratingCreatives] = useState(false);
   const [analysisMode, setAnalysisMode] = useState(false);
   const [selectedTool, setSelectedTool] = useState(null);
   const [showTools, setShowTools] = useState(false);
@@ -17,6 +19,11 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
   const [campaignContext, setCampaignContext] = useState(null);
   const [showReportHistory, setShowReportHistory] = useState(false);
   const [reportHistory, setReportHistory] = useState([]);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [showCreativeModal, setShowCreativeModal] = useState(false);
+  const [pendingCreativeMessage, setPendingCreativeMessage] = useState('');
+
 
   // Persist report data and campaign context in localStorage (but not showReport state)
   useEffect(() => {
@@ -218,30 +225,127 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
       enabled: true
     },
     {
-      id: 'creative-optimization',
-      name: 'Creative Optimization',
-      description: 'Optimize ad creatives and content',
+      id: 'creative-generation',
+      name: 'Creative Generation',
+      description: 'Generate creative content including ad headlines and copy',
       icon: '🎨',
-      enabled: false
-    },
-    {
-      id: 'audience-insights',
-      name: 'Audience Insights',
-      description: 'Analyze audience behavior and targeting',
-      icon: '👥',
-      enabled: false
-    },
-    {
-      id: 'budget-optimization',
-      name: 'Budget Optimization',
-      description: 'Optimize budget allocation and bidding',
-      icon: '💰',
-      enabled: false
+      enabled: true
     }
   ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleImageClick = (imageData, filename) => {
+    setSelectedImage({
+      src: imageData.startsWith('data:') ? imageData : `data:image/png;base64,${imageData}`,
+      filename: filename
+    });
+    setShowImageModal(true);
+  };
+
+  const closeImageModal = () => {
+    setShowImageModal(false);
+    setSelectedImage(null);
+  };
+
+  const handleCreativeFormSubmit = async (formData) => {
+    try {
+      console.log('🚀 CREATIVE FORM SUBMIT CALLED!');
+      console.log('📝 Form data received:', formData);
+      console.log('👤 User object:', user);
+      console.log('🤖 Assistant object:', assistant);
+      console.log('💬 Pending message:', pendingCreativeMessage);
+      
+      setIsGeneratingCreatives(true);
+      
+      // Add "Generating" message to chat
+      const generatingMessage = {
+        role: 'assistant',
+        content: `🎨 Generating ${formData.amount} ad creative(s) with "${formData.creativeAngle}" angle... This may take a moment.`,
+        timestamp: new Date().toISOString(),
+        isGenerating: true
+      };
+      setMessages(prev => [...prev, generatingMessage]);
+      
+      const requestPayload = {
+        message: pendingCreativeMessage,
+        assistant: assistant,
+        user: user,
+        tool_call: {
+          function: {
+            name: 'creative-generation',
+            arguments: JSON.stringify({
+              amount: formData.amount,
+              creative_angle: formData.creativeAngle,
+              description: formData.description,
+              company_profile_id: formData.companyProfileId,
+              ai_assistant_id: formData.aiAssistantId
+            })
+          }
+        }
+      };
+      
+      console.log('🌐 About to make API call to /api/assistant-chat');
+      console.log('📦 Request payload:', JSON.stringify(requestPayload, null, 2));
+      
+      const response = await fetch('/api/assistant-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestPayload)
+      });
+      
+      const data = await response.json();
+      setIsGeneratingCreatives(false);
+      
+      // Handle the response with potential binary files
+      if (data.response) {
+        try {
+          const parsedResponse = JSON.parse(data.response);
+          if (parsedResponse.binary_files && parsedResponse.binary_files.length > 0) {
+            // Store binary files for display
+            const creativeMessage = {
+              role: 'assistant',
+              content: parsedResponse.creative_content || `Generated ${formData.amount} ad creative(s) with ${formData.creativeAngle} angle.`,
+              binary_files: parsedResponse.binary_files,
+              timestamp: new Date().toISOString(),
+              source: 'creative_generation'
+            };
+            
+            // Add the message with binary files to the messages array
+            setMessages(prev => [...prev, creativeMessage]);
+          } else {
+            // Add a success message even if no binary files
+            const successMessage = {
+              role: 'assistant',
+              content: parsedResponse.creative_content || `Successfully generated ${formData.amount} ad creative(s) with ${formData.creativeAngle} angle.`,
+              timestamp: new Date().toISOString(),
+              source: 'creative_generation'
+            };
+            setMessages(prev => [...prev, successMessage]);
+          }
+        } catch (parseError) {
+          // If parsing fails, add a generic success message
+          const fallbackMessage = {
+            role: 'assistant',
+            content: `Successfully generated ${formData.amount} ad creative(s) with ${formData.creativeAngle} angle.`,
+            timestamp: new Date().toISOString(),
+            source: 'creative_generation'
+          };
+          setMessages(prev => [...prev, fallbackMessage]);
+        }
+      }
+      
+      // Clear pending message
+      setPendingCreativeMessage('');
+    } catch (error) {
+      console.error('Error in creative generation:', error);
+      setIsGeneratingCreatives(false);
+      throw error; // Re-throw to let the modal handle the error
+    }
   };
 
   // Enhanced AI analysis function that reads the actual report data
@@ -346,6 +450,16 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
       initializeAssistant();
     }
   }, [conversation?.id]);
+
+  // Handle tool selection
+  useEffect(() => {
+    console.log('🔧 Tool selection changed:', selectedTool);
+    if (selectedTool && selectedTool.id === 'creative-generation') {
+      console.log('🎨 Creative generation tool selected via tools button - Opening modal');
+      setShowCreativeModal(true);
+      console.log('✅ Modal should now be open via tool selection');
+    }
+  }, [selectedTool]);
 
   const initializeAssistant = async () => {
     if (messages.length > 0) return;
@@ -542,14 +656,30 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
         }
         
         console.log('Final messageMetadata:', JSON.stringify(messageMetadata, null, 2));
+        
+        // Debug binary files from API response
+        console.log('🔍 Frontend received aiResponse.binaryFiles:', aiResponse.binaryFiles ? aiResponse.binaryFiles.length : 'undefined', 'files');
+        if (aiResponse.binaryFiles && aiResponse.binaryFiles.length > 0) {
+          console.log('🖼️ First binary file:', {
+            type: aiResponse.binaryFiles[0].type,
+            filename: aiResponse.binaryFiles[0].filename,
+            format: aiResponse.binaryFiles[0].format,
+            dataLength: aiResponse.binaryFiles[0].data ? aiResponse.binaryFiles[0].data.length : 0
+          });
+          console.log('🖼️ Binary file data preview:', aiResponse.binaryFiles[0].data ? aiResponse.binaryFiles[0].data.substring(0, 50) + '...' : 'No data');
+        }
 
         // Create assistant message with metadata included
         const assistantMessage = {
           role: 'assistant',
           content: aiResponse.response || aiResponse,
           timestamp: messageMetadata.timestamp,
-          metadata: messageMetadata
+          metadata: messageMetadata,
+          // Include binary files if present in the response
+          binary_files: aiResponse.binaryFiles || []
         };
+        
+        console.log('📝 Created assistantMessage with binary_files:', assistantMessage.binary_files.length, 'files');
 
         // Add message to state with complete metadata
         setMessages(prev => [...prev, assistantMessage]);
@@ -785,14 +915,14 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
             return 'Sorry, there was an error performing the campaign analysis. Please try again.';
           }
         
-        case 'creative-optimization':
-          return `🎨 **Creative Optimization Tool** (Coming Soon)\n\nI'll help you optimize your ad creatives for better performance. This tool will analyze your current creatives and suggest improvements for higher engagement and conversion rates.`;
-        
-        case 'audience-insights':
-          return `👥 **Audience Insights Tool** (Coming Soon)\n\nI'll provide detailed insights about your audience behavior, demographics, and targeting opportunities to help you reach the right people with your campaigns.`;
-        
-        case 'budget-optimization':
-          return `💰 **Budget Optimization Tool** (Coming Soon)\n\nI'll analyze your budget allocation and suggest optimizations to maximize your return on ad spend (ROAS) across all your campaigns.`;
+        case 'creative-generation':
+          // Show the creative generation modal instead of directly processing
+          console.log('🎨 CREATIVE GENERATION TOOL SELECTED - Opening modal');
+          console.log('📝 User input:', userInput);
+          setPendingCreativeMessage(userInput);
+          setShowCreativeModal(true);
+          console.log('✅ Modal should now be open, showCreativeModal set to true');
+          return 'Please fill out the creative generation form to specify your requirements.';
         
         default:
           break;
@@ -952,7 +1082,8 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
         return {
           response: data.response || null,
           campaignContext: data.campaignContext || null,
-          hasReport: hasReportContent
+          hasReport: hasReportContent,
+          binaryFiles: data.binaryFiles || []
         };
       } catch (error) {
         console.error('Error calling assistant chat API:', error);
@@ -1111,6 +1242,58 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
                   <div className="text-gray-800 whitespace-pre-wrap leading-relaxed">
                     {message.content}
                   </div>
+                  
+                  {/* Display binary files (images) if present */}
+                  {message.binary_files && message.binary_files.length > 0 && (
+                    <div className="mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {message.binary_files.map((file, fileIndex) => (
+                          file.type === 'image' && file.data ? (
+                            <div key={fileIndex} className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
+                              <div className="aspect-video bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors duration-200"
+                                   onClick={() => handleImageClick(file.data, file.filename || `Creative ${fileIndex + 1}`)}>
+                                <img
+                                  src={file.data.startsWith('data:') ? file.data : `data:image/${file.format || 'png'};base64,${file.data}`}
+                                  alt={file.filename || `Creative ${fileIndex + 1}`}
+                                  className="max-w-full max-h-full object-contain"
+                                  onError={(e) => {
+                                    console.error('Image load error:', e);
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                                <div className="hidden text-gray-500 text-center p-4 items-center justify-center flex-col">
+                                  <svg className="w-8 h-8 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg>
+                                  <div className="text-sm">Failed to load image</div>
+                                </div>
+                              </div>
+                              <div className="p-3 bg-white">
+                                <div className="text-sm font-medium text-gray-900">{file.filename || `Creative ${fileIndex + 1}`}</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {file.format?.toUpperCase() || 'IMAGE'}
+                                </div>
+                                {file.data && (
+                                  <a
+                                    href={file.data.startsWith('data:') ? file.data : `data:image/${file.format || 'png'};base64,${file.data}`}
+                                    download={file.filename || `creative_${fileIndex + 1}.${file.format || 'png'}`}
+                                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-2"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    Download
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          ) : null
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Show 'See Report' button only for messages with actual reports */}
                   {message.role === 'assistant' && 
                    (message.metadata && message.metadata.has_report) && 
@@ -1235,6 +1418,31 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
               </div>
             </div>
           )}
+          {isGeneratingCreatives && (
+            <div className="py-4 px-4 bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-400">
+              <div className="flex space-x-4">
+                <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0V3a1 1 0 011 1v1M7 4V3a1 1 0 011-1v1m-1 0h10M5 8h14l-1 13H6L5 8z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <div className="text-sm font-medium text-gray-900 mb-1">{assistant.name}</div>
+                  <div className="flex items-center space-x-2 mb-2">
+                    <div className="flex space-x-1">
+                      <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse"></div>
+                      <div className="w-3 h-3 bg-pink-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                      <div className="w-3 h-3 bg-purple-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                    </div>
+                    <span className="text-sm font-medium text-purple-700">🎨 Generating creative ads...</span>
+                  </div>
+                  <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full inline-block">
+                    ⏱️ This usually takes 5-6 minutes. Please wait...
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
         <div ref={messagesEndRef} />
       </div>
@@ -1272,9 +1480,13 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
                 <button
                   key={tool.id}
                   onClick={() => {
+                    console.log('🔧 Tool button clicked:', tool);
                     if (tool.enabled) {
+                      console.log('✅ Tool is enabled, setting as selected tool');
                       setSelectedTool(tool);
                       setShowTools(false);
+                    } else {
+                      console.log('❌ Tool is disabled');
                     }
                   }}
                   disabled={!tool.enabled}
@@ -1540,6 +1752,69 @@ const AssistantChat = ({ assistant, conversation, onClose }) => {
           </div>
         </div>
       )}
+
+      {/* Image Modal */}
+      {showImageModal && selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+             onClick={closeImageModal}>
+          <div className="relative max-w-4xl max-h-full bg-white rounded-lg overflow-hidden"
+               onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">
+                {selectedImage.filename}
+              </h3>
+              <button
+                onClick={closeImageModal}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-4">
+              <img
+                src={selectedImage.src}
+                alt={selectedImage.filename}
+                className="max-w-full max-h-[70vh] object-contain mx-auto"
+              />
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50">
+              <div className="text-sm text-gray-600">
+                Click outside to close
+              </div>
+              <a
+                href={selectedImage.src}
+                download={selectedImage.filename}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Creative Generation Modal */}
+      <CreativeGenerationModal
+        isOpen={showCreativeModal}
+        onClose={() => {
+          setShowCreativeModal(false);
+          setPendingCreativeMessage('');
+        }}
+        onSubmit={handleCreativeFormSubmit}
+        companyProfileId={assistant?.company_profile_id || 'default-company-profile'}
+        aiAssistantId={assistant?.id}
+      />
+
     </div>
   );
 };

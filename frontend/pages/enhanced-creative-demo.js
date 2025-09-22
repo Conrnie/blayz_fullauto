@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Card, CardContent, Button, TextField, Select, MenuItem, FormControl, InputLabel, Grid, Alert, CircularProgress, Chip, Divider, Autocomplete } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Container, Typography, Card, CardContent, Button, Alert, CircularProgress, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import Layout from '../components/Layout/Layout';
-import { getCompanyProfiles } from '../lib/apiClient';
 
 const StyledCard = styled(Card)(({ theme }) => ({
   marginBottom: theme.spacing(3),
@@ -10,621 +9,516 @@ const StyledCard = styled(Card)(({ theme }) => ({
   borderRadius: '12px',
 }));
 
-const ColorChip = styled(Chip)(({ theme, bgcolor }) => ({
-  backgroundColor: bgcolor || theme.palette.primary.main,
-  color: '#fff',
-  fontWeight: 'bold',
-  margin: '4px',
-  '&:hover': {
-    backgroundColor: bgcolor || theme.palette.primary.dark,
-  }
+const ResponseBox = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(2),
+  marginTop: theme.spacing(2),
+  backgroundColor: '#f5f5f5',
+  maxHeight: '400px',
+  overflow: 'auto',
+  fontFamily: 'monospace',
+  fontSize: '12px',
+  whiteSpace: 'pre-wrap'
 }));
 
 const EnhancedCreativeDemo = () => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+  const [rawResponse, setRawResponse] = useState(null);
+  const [transformedImages, setTransformedImages] = useState([]);
   const [error, setError] = useState(null);
-  const [companyProfiles, setCompanyProfiles] = useState([]);
-  const [selectedProfile, setSelectedProfile] = useState(null);
-  const [loadingProfiles, setLoadingProfiles] = useState(true);
-  
-  // Form state
-  const [formData, setFormData] = useState({
-    companyName: 'TechFlow Solutions',
-    industry: 'Software Development',
-    websiteUrl: 'https://techflow.com',
-    description: 'Innovative software solutions for modern businesses',
-    brandVoice: 'Professional and innovative',
-    targetAudience: 'Small to medium business owners',
-    primaryColor: '#2563EB',
-    secondaryColor: '#3B82F6',
-    campaignObjective: 'conversions',
-    adFormat: 'single_image',
-    customPrompt: ''
-  });
 
-  // Load company profiles on component mount
-  useEffect(() => {
-    const loadCompanyProfiles = async () => {
-      try {
-        const profilesResponse = await getCompanyProfiles();
-        console.log('Company profiles response:', profilesResponse);
-        
-        if (profilesResponse && profilesResponse.profiles) {
-          const completedProfiles = profilesResponse.profiles.filter(p => p.status === 'completed');
-          console.log('Completed profiles found:', completedProfiles.length);
-          setCompanyProfiles(completedProfiles);
-          
-          // Auto-select first profile if available
-          if (completedProfiles.length > 0) {
-            handleProfileSelect(completedProfiles[0]);
-          }
-        } else {
-          console.log('No profiles found in response');
-        }
-      } catch (err) {
-        console.error('Error loading company profiles:', err);
-        setError('Failed to load company profiles: ' + err.message);
-      } finally {
-        setLoadingProfiles(false);
-      }
-    };
-
-    loadCompanyProfiles();
-  }, []);
-
-  const handleInputChange = (field) => (event) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: event.target.value
-    }));
-  };
-
-  const handleProfileSelect = (profile) => {
-    setSelectedProfile(profile);
-    if (profile) {
-      const displaySummary = profile.display_summary || {};
-      const fullProfile = profile.full_profile || {};
-      
-      setFormData(prev => ({
-        ...prev,
-        companyName: profile.company_name || prev.companyName,
-        industry: displaySummary.industry || fullProfile.industry || prev.industry,
-        websiteUrl: profile.website_url || prev.websiteUrl,
-        description: displaySummary.summary || displaySummary.displayed_summary || fullProfile.summary || prev.description,
-        brandVoice: displaySummary.brand_voice || fullProfile.brand_voice || prev.brandVoice,
-        targetAudience: displaySummary.target_audience || fullProfile.target_audience || prev.targetAudience,
-        primaryColor: displaySummary.brand_colors?.primary || fullProfile.brand_colors?.primary || prev.primaryColor,
-        secondaryColor: displaySummary.brand_colors?.secondary || fullProfile.brand_colors?.secondary || prev.secondaryColor
-      }));
-    }
-  };
-
-  const generateCreative = async () => {
+  const callWebhook = async () => {
     setLoading(true);
     setError(null);
-    setResult(null);
-
+    setRawResponse(null);
+    
     try {
-      // Call the actual n8n webhook with the form data
-      const response = await fetch(process.env.NEXT_PUBLIC_WEBHOOK_N8N_URL || 'https://primary-production-7c692.up.railway.app/webhook/1ffd1467-a5f0-48a2-a735-ab0ccfbf2e37', {
+      console.log('🚀 Calling n8n webhook directly...');
+      
+      const response = await fetch('http://145.14.157.237:5678/webhook-test/creative-generation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_instructions: formData.customPrompt || `Generate creative for ${formData.companyName} in ${formData.industry} targeting ${formData.targetAudience}`,
+          user_instructions: 'Generate creative ads for TechFlow Solutions',
           company_profile: {
-            company_name: formData.companyName,
-            industry: formData.industry,
-            website_url: formData.websiteUrl,
-            description: formData.description,
-            brand_voice: formData.brandVoice,
-            target_audience: formData.targetAudience,
-            primary_color: formData.primaryColor,
-            secondary_color: formData.secondaryColor,
-            campaign_objective: formData.campaignObjective,
-            ad_format: formData.adFormat
+            company_name: 'TechFlow Solutions',
+            industry: 'Software Development',
+            website_url: 'https://techflow.com',
+            description: 'Innovative software solutions for modern businesses',
+            brand_voice: 'Professional and innovative',
+            target_audience: 'Small to medium business owners',
+            primary_color: '#2563EB',
+            secondary_color: '#3B82F6',
+            campaign_objective: 'conversions',
+            ad_format: 'single_image'
           }
-        }),
+        })
       });
 
-      const data = await response.json();
-      console.log('Received response:', data);
+      console.log('📦 Response received, status:', response.status);
+      console.log('📦 Response headers:', Object.fromEntries(response.headers.entries()));
       
-      // Handle the new JSON response structure from enhanced n8n workflow
-       if (data.success && data.data) {
-         const qualityAnalysis = data.data.quality_analysis;
-         
-         setResult({
-           success: true,
-           creative: {
-             headline: `Transform Your ${formData.industry} Business Today`,
-             primary_text: `Discover how ${formData.companyName} can revolutionize your ${formData.targetAudience} experience with our innovative solutions.`,
-             description: `Perfect for ${formData.targetAudience} looking to enhance their ${formData.industry} operations.`,
-             cta: 'Learn More',
-             image_description: data.data.gemini_response || 'AI-generated image description',
-             image: data.data.image
-           },
-           validation: {
-             is_valid: qualityAnalysis ? qualityAnalysis.overall_score >= 7 : true,
-             quality_score: qualityAnalysis ? qualityAnalysis.overall_score * 10 : 85.5,
-             feedback: [
-               qualityAnalysis ? qualityAnalysis.analysis : 'Creative generated successfully',
-               qualityAnalysis && qualityAnalysis.was_enhanced ? 'Image enhanced for better quality' : 'Image created with AI workflow'
-             ],
-             suggestions: [
-               'Consider A/B testing different variations',
-               'Test with different target audiences'
-             ],
-             quality_analysis: qualityAnalysis
-           },
-           generation_metadata: {
-             attempts: 1,
-             total_time_seconds: 2.1,
-             timestamp: data.timestamp,
-             note: qualityAnalysis && qualityAnalysis.was_enhanced ? 
-                   'Generated using enhanced n8n workflow with quality validation and improvement' :
-                   'Generated using n8n workflow with quality validation'
-           }
-         });
-       } else {
-         setError(data.error || 'Failed to generate creative');
-       }
+      // Check if response is binary (image) or JSON
+      const contentType = response.headers.get('content-type') || '';
+      console.log('📦 Content-Type:', contentType);
+      
+      if (contentType.includes('image/') || contentType.includes('application/octet-stream')) {
+        // Handle binary image response
+        console.log('🖼️ Detected binary image response');
+        const arrayBuffer = await response.arrayBuffer();
+        
+        // Convert ArrayBuffer to base64 efficiently
+        const uint8Array = new Uint8Array(arrayBuffer);
+        let binaryString = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+          binaryString += String.fromCharCode(uint8Array[i]);
+        }
+        const base64 = btoa(binaryString);
+        const imageUrl = `data:${contentType};base64,${base64}`;
+        
+        console.log('📊 Base64 conversion complete:');
+        console.log('   - Original size:', arrayBuffer.byteLength, 'bytes');
+        console.log('   - Base64 length:', base64.length, 'characters');
+        console.log('   - Base64 preview:', base64.substring(0, 100) + '...');
+        
+        // Create display data with truncated base64 for readability
+        const binaryData = {
+          type: 'binary_image',
+          contentType: contentType,
+          size: arrayBuffer.byteLength,
+          base64: base64.substring(0, 100) + `... [${base64.length - 100} more characters]`,
+          base64_length: base64.length,
+          imageUrl: imageUrl
+        };
+        
+        setRawResponse(JSON.stringify(binaryData, null, 2));
+        
+        // Automatically set the transformed image
+        setTransformedImages([{
+          id: 0,
+          filename: 'generated_image.png',
+          format: contentType.split('/')[1] || 'png',
+          url: imageUrl
+        }]);
+        
+      } else {
+        // Handle JSON response
+        console.log('📄 Detected JSON response');
+        const data = await response.json();
+        console.log('📦 Raw JSON data:', data);
+        
+        // Check if this is an array response (multiple items from n8n)
+        if (Array.isArray(data)) {
+          console.log('🔍 Detected array response with', data.length, 'items');
+          
+          // Extract all images from the array
+          const allImages = data.flatMap((item, index) => {
+            console.log(`🔍 Processing item ${index}:`, item);
+            const itemData = item.data || item;
+            
+            // Handle n8n nested structure where data is inside 'json' object
+            const actualData = itemData.json || itemData;
+            console.log(`🔍 Actual data for item ${index}:`, actualData);
+            
+            // Look for images in various formats
+            // Handle Supabase schema with image_base64 field
+            if (actualData.image_base64) {
+              console.log(`📸 Found image_base64 in item ${index}:`, typeof actualData.image_base64);
+              return [{
+                id: index,
+                filename: `creative_${actualData.id || index + 1}.png`,
+                format: 'png',
+                url: actualData.image_base64.startsWith('data:') ? actualData.image_base64 : `data:image/png;base64,${actualData.image_base64}`,
+                source: actualData === itemData.json ? 'item.json.image_base64' : 'item.image_base64',
+                metadata: {
+                  headline: actualData.headline,
+                  sub_headline: actualData.sub_headline,
+                  cta: actualData.cta,
+                  recommended_scenery: actualData.recommended_scenery,
+                  is_favorite: actualData.is_favorite,
+                  created_at: actualData.created_at,
+                  type: actualData.type
+                }
+              }];
+            }
+            // Fallback for other image field names
+            if (actualData.image) {
+              console.log(`📸 Found image in item ${index}:`, typeof actualData.image);
+              return [{
+                id: index,
+                filename: `generated_image_${index + 1}.png`,
+                format: 'png',
+                url: actualData.image.startsWith('data:') ? actualData.image : `data:image/png;base64,${actualData.image}`,
+                source: actualData === itemData.json ? 'item.json.image' : 'item.data.image'
+              }];
+            }
+            if (actualData.images && Array.isArray(actualData.images)) {
+              console.log(`📸 Found ${actualData.images.length} images in item ${index}`);
+              return actualData.images.map((img, imgIndex) => ({
+                id: `${index}_${imgIndex}`,
+                filename: `generated_image_${index + 1}_${imgIndex + 1}.png`,
+                format: 'png',
+                url: img.startsWith('data:') ? img : `data:image/png;base64,${img}`,
+                source: actualData === itemData.json ? 'item.json.images' : 'item.data.images'
+              }));
+            }
+            if (actualData.files && Array.isArray(actualData.files)) {
+              console.log(`📁 Found ${actualData.files.length} files in item ${index}`);
+              return actualData.files.map((file, fileIndex) => ({
+                id: `${index}_${fileIndex}`,
+                filename: file.filename || `generated_image_${index + 1}_${fileIndex + 1}.png`,
+                format: file.format || 'png',
+                url: file.data ? (file.data.startsWith('data:') ? file.data : `data:image/${file.format || 'png'};base64,${file.data}`) : null,
+                source: actualData === itemData.json ? 'item.json.files' : 'item.data.files'
+              })).filter(img => img.url);
+            }
+            return [];
+          });
+          
+          console.log('🖼️ Total images extracted:', allImages.length);
+          console.log('🖼️ Images details:', allImages.map(img => ({ id: img.id, filename: img.filename, source: img.source })));
+          
+          // Automatically set the transformed images
+          setTransformedImages(allImages);
+          
+          // Create a summary for the raw response
+          const summary = {
+            type: 'json_array_response',
+            total_items: data.length,
+            total_images_found: allImages.length,
+            images_by_item: data.map((item, index) => {
+              const itemData = item.data || item;
+              return {
+                item_index: index,
+                has_image: !!itemData.image,
+                has_images_array: !!(itemData.images && Array.isArray(itemData.images)),
+                has_files_array: !!(itemData.files && Array.isArray(itemData.files)),
+                images_count: (itemData.images && Array.isArray(itemData.images) ? itemData.images.length : 0) + 
+                             (itemData.files && Array.isArray(itemData.files) ? itemData.files.length : 0) + 
+                             (itemData.image ? 1 : 0)
+              };
+            }),
+            raw_data_preview: JSON.stringify(data, null, 2).substring(0, 1000) + '...'
+          };
+          
+          setRawResponse(JSON.stringify(summary, null, 2));
+          
+        } else {
+          // Single JSON object response
+          console.log('📄 Single JSON object response');
+          setRawResponse(JSON.stringify(data, null, 2));
+          
+          // Check if this is a wrapped response with "images" array
+          if (data.images && Array.isArray(data.images)) {
+            console.log('🔍 Found wrapped images array with', data.images.length, 'items');
+            
+            // Process the wrapped images array the same way as direct array
+            const allImages = data.images.flatMap((item, index) => {
+              console.log(`🔍 Processing wrapped item ${index}:`, item);
+              const itemData = item.data || item;
+              
+              // Handle n8n nested structure where data is inside 'json' object
+              const actualData = itemData.json || itemData;
+              console.log(`🔍 Actual wrapped data for item ${index}:`, actualData);
+              
+              // Handle Supabase schema with image_base64 field
+              if (actualData.image_base64) {
+                console.log(`📸 Found image_base64 in wrapped item ${index}:`, typeof actualData.image_base64);
+                return [{
+                  id: index,
+                  filename: `creative_${actualData.id || index + 1}.png`,
+                  format: 'png',
+                  url: actualData.image_base64.startsWith('data:') ? actualData.image_base64 : `data:image/png;base64,${actualData.image_base64}`,
+                  source: actualData === itemData.json ? 'wrapped.images.json.image_base64' : 'wrapped.images.image_base64',
+                  metadata: {
+                    headline: actualData.headline,
+                    sub_headline: actualData.sub_headline,
+                    cta: actualData.cta,
+                    recommended_scenery: actualData.recommended_scenery,
+                    is_favorite: actualData.is_favorite,
+                    created_at: actualData.created_at,
+                    type: actualData.type
+                  }
+                }];
+              }
+              return [];
+            });
+            
+            console.log('🖼️ Total images extracted from wrapped response:', allImages.length);
+            setTransformedImages(allImages);
+            
+          } else if (data.image) {
+            // Check if this single object has images
+            console.log('📸 Found single image in JSON response');
+            setTransformedImages([{
+              id: 0,
+              filename: 'generated_image.png',
+              format: 'png',
+              url: data.image.startsWith('data:') ? data.image : `data:image/png;base64,${data.image}`,
+              source: 'json.image'
+            }]);
+          }
+        }
+      }
+      
     } catch (err) {
-      setError('Failed to generate creative: ' + err.message);
+      console.error('❌ Error calling webhook:', err);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const validateCreative = async () => {
-    if (!result?.creative) return;
-    
-    setLoading(true);
+  const transformBinaryData = () => {
+    if (!rawResponse) {
+      setError('No raw response available. Call webhook first.');
+      return;
+    }
+
     try {
-      // Simulate validation processing time
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const data = JSON.parse(rawResponse);
+      console.log('🔄 Transforming binary data...');
       
-      // Mock validation response for demo purposes
-      const mockValidation = {
-        is_valid: Math.random() > 0.3, // 70% chance of being valid
-        quality_score: Math.floor(Math.random() * 30) + 70, // Score between 70-100
-        feedback: [
-          'Creative aligns well with brand voice',
-          'Color scheme matches brand guidelines',
-          'Message is clear and compelling'
-        ],
-        suggestions: [
-          'Consider testing different call-to-action phrases',
-          'Try variations with different emotional appeals',
-          'Test with different target audience segments'
-        ],
-        validation_timestamp: new Date().toISOString(),
-        note: 'Demo validation - Will be integrated with n8n workflow'
-      };
+      if (data.type === 'binary_image') {
+        // Handle direct binary image response
+        console.log('🖼️ Processing direct binary image response');
+        const image = {
+          id: 0,
+          filename: 'generated_image.' + (data.format || 'png'),
+          format: data.contentType?.split('/')[1] || 'png',
+          url: data.imageUrl,
+          size: data.size
+        };
+        
+        setTransformedImages([image]);
+        console.log('🖼️ Transformed 1 binary image');
+        
+      } else {
+        // Look for binary files in JSON response structure
+        const binaryFiles = data.binaryFiles || [];
+        console.log('📁 Found binary files in JSON:', binaryFiles.length);
+        
+        const images = binaryFiles.map((file, index) => {
+          if (file.data && file.type === 'image') {
+            const imageUrl = `data:image/${file.format || 'png'};base64,${file.data}`;
+            return {
+              id: index,
+              filename: file.filename,
+              format: file.format,
+              url: imageUrl
+            };
+          }
+          return null;
+        }).filter(Boolean);
+        
+        console.log('🖼️ Transformed images from JSON:', images.length);
+        setTransformedImages(images);
+      }
       
-      setResult(prev => ({
-        ...prev,
-        validation: mockValidation
-      }));
     } catch (err) {
-      setError('Demo validation error: ' + err.message);
-    } finally {
-      setLoading(false);
+      console.error('❌ Error transforming binary data:', err);
+      setError('Error transforming binary data: ' + err.message);
     }
   };
 
   return (
     <Layout>
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Typography variant="h3" component="h1" gutterBottom align="center" sx={{ mb: 4, fontWeight: 'bold' }}>
-          🎨 Enhanced Creative Agent Demo
+        <Typography variant="h4" component="h1" gutterBottom align="center">
+          🔧 Enhanced Creative Demo - Debug Mode
         </Typography>
         
-        <Typography variant="h6" align="center" color="text.secondary" sx={{ mb: 4 }}>
-          Test the AI-powered creative generation with quality control
+        <Typography variant="body1" align="center" color="text.secondary" sx={{ mb: 4 }}>
+          Simplified debugging interface to test webhook response and binary data transformation
         </Typography>
 
-        <Grid container spacing={4}>
-          {/* Input Form */}
-          <Grid item xs={12} md={6}>
-            <StyledCard>
-              <CardContent>
-                <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  ⚙️ Configuration
-                </Typography>
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {/* Company Profile Selector */}
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      🏢 Company Profile Selection
-                    </Typography>
-                    {loadingProfiles ? (
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <CircularProgress size={20} />
-                        <Typography variant="body2">Loading company profiles...</Typography>
-                      </Box>
-                    ) : companyProfiles.length > 0 ? (
-                      <Autocomplete
-                        options={companyProfiles}
-                        getOptionLabel={(option) => `${option.company_name} (${option.display_summary?.industry || 'Unknown Industry'})`}
-                        value={selectedProfile}
-                        onChange={(event, newValue) => handleProfileSelect(newValue)}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Select Company Profile"
-                            placeholder="Choose from your existing company profiles"
-                            fullWidth
-                          />
-                        )}
-                        renderOption={(props, option) => (
-                          <Box component="li" {...props}>
-                            <Box>
-                              <Typography variant="subtitle1" fontWeight="bold">
-                                {option.company_name}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {option.display_summary?.industry || 'Unknown Industry'} • {option.website_url}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        )}
-                      />
-                    ) : (
-                      <Alert severity="info">
-                        No completed company profiles found. Please create a company profile first in the Company Profiles section.
-                      </Alert>
-                    )}
-                  </Box>
-                  
-                  <Divider sx={{ my: 2 }} />
-                  
-                  {/* Custom Prompt Input */}
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      💭 Custom Ad Description (Optional)
-                    </Typography>
-                    <TextField
-                      label="Describe the ad you want to create"
-                      placeholder="e.g., Create a holiday promotion ad focusing on our premium features with a sense of urgency..."
-                      value={formData.customPrompt}
-                      onChange={handleInputChange('customPrompt')}
-                      multiline
-                      rows={4}
-                      fullWidth
-                      helperText="Provide specific instructions for the type of ad you want to generate. This will guide the AI in creating more targeted content."
-                    />
-                  </Box>
-                  
-                  <Divider sx={{ my: 2 }} />
-                  
-                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    ⚙️ Manual Configuration Override
-                  </Typography>
-                  
-                  <TextField
-                    label="Company Name"
-                    value={formData.companyName}
-                    onChange={handleInputChange('companyName')}
-                    fullWidth
-                    helperText="Auto-filled from selected profile"
-                  />
-                  
-                  <TextField
-                    label="Industry"
-                    value={formData.industry}
-                    onChange={handleInputChange('industry')}
-                    fullWidth
-                    helperText="Auto-filled from selected profile"
-                  />
-                  
-                  <TextField
-                    label="Website URL"
-                    value={formData.websiteUrl}
-                    onChange={handleInputChange('websiteUrl')}
-                    fullWidth
-                    helperText="Auto-filled from selected profile"
-                  />
-                  
-                  <TextField
-                    label="Company Description"
-                    value={formData.description}
-                    onChange={handleInputChange('description')}
-                    multiline
-                    rows={3}
-                    fullWidth
-                    helperText="Auto-filled from selected profile"
-                  />
-                  
-                  <TextField
-                    label="Brand Voice"
-                    value={formData.brandVoice}
-                    onChange={handleInputChange('brandVoice')}
-                    fullWidth
-                    helperText="Auto-filled from selected profile"
-                  />
-                  
-                  <TextField
-                    label="Target Audience"
-                    value={formData.targetAudience}
-                    onChange={handleInputChange('targetAudience')}
-                    fullWidth
-                    helperText="Auto-filled from selected profile"
-                  />
-                  
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    <TextField
-                      label="Primary Color"
-                      type="color"
-                      value={formData.primaryColor}
-                      onChange={handleInputChange('primaryColor')}
-                      sx={{ flex: 1 }}
-                    />
-                    <TextField
-                      label="Secondary Color"
-                      type="color"
-                      value={formData.secondaryColor}
-                      onChange={handleInputChange('secondaryColor')}
-                      sx={{ flex: 1 }}
-                    />
-                  </Box>
-                  
-                  <FormControl fullWidth>
-                    <InputLabel>Campaign Objective</InputLabel>
-                    <Select
-                      value={formData.campaignObjective}
-                      onChange={handleInputChange('campaignObjective')}
-                      label="Campaign Objective"
-                    >
-                      <MenuItem value="conversions">Conversions</MenuItem>
-                      <MenuItem value="traffic">Traffic</MenuItem>
-                      <MenuItem value="engagement">Engagement</MenuItem>
-                      <MenuItem value="awareness">Brand Awareness</MenuItem>
-                    </Select>
-                  </FormControl>
-                  
-                  <FormControl fullWidth>
-                    <InputLabel>Ad Format</InputLabel>
-                    <Select
-                      value={formData.adFormat}
-                      onChange={handleInputChange('adFormat')}
-                      label="Ad Format"
-                    >
-                      <MenuItem value="single_image">Single Image</MenuItem>
-                      <MenuItem value="carousel">Carousel</MenuItem>
-                      <MenuItem value="video">Video</MenuItem>
-                    </Select>
-                  </FormControl>
-                  
-                  <Button
-                    variant="contained"
-                    size="large"
-                    onClick={generateCreative}
-                    disabled={loading}
-                    sx={{ mt: 2, py: 1.5 }}
-                  >
-                    {loading ? <CircularProgress size={24} /> : '🚀 Generate Creative'}
-                  </Button>
-                </Box>
-              </CardContent>
-            </StyledCard>
-          </Grid>
-
-          {/* Results */}
-          <Grid item xs={12} md={6}>
-            {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
-                {error}
-              </Alert>
-            )}
-
-            {result && (
-              <StyledCard>
-                <CardContent>
-                  <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    📋 Generated Creative
-                  </Typography>
-                  
-                  {result.creative && (
-                    <Box sx={{ mb: 3 }}>
-                      <Typography variant="h6" gutterBottom>📝 Ad Copy</Typography>
-                      <Box sx={{ pl: 2, borderLeft: '3px solid #2563EB', mb: 2 }}>
-                        <Typography variant="subtitle1" fontWeight="bold">Headline:</Typography>
-                        <Typography variant="body1" sx={{ mb: 1 }}>{result.creative.headline}</Typography>
-                        
-                        <Typography variant="subtitle1" fontWeight="bold">Primary Text:</Typography>
-                        <Typography variant="body1" sx={{ mb: 1 }}>{result.creative.primary_text}</Typography>
-                        
-                        <Typography variant="subtitle1" fontWeight="bold">Description:</Typography>
-                        <Typography variant="body1" sx={{ mb: 1 }}>{result.creative.description}</Typography>
-                        
-                        <Typography variant="subtitle1" fontWeight="bold">Call to Action:</Typography>
-                        <Chip label={result.creative.cta} color="primary" />
-                      </Box>
-                      
-                      {result.creative.image && (
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="h6" gutterBottom>🖼️ Generated Image</Typography>
-                          <Box sx={{ pl: 2, borderLeft: '3px solid #3B82F6', textAlign: 'center' }}>
-                            <img 
-                              src={result.creative.image} 
-                              alt="Generated creative image" 
-                              style={{ 
-                                maxWidth: '100%', 
-                                height: 'auto', 
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                              }}
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'block';
-                              }}
-                            />
-                            <Typography 
-                              variant="body2" 
-                              color="error" 
-                              sx={{ display: 'none', mt: 2 }}
-                            >
-                              Failed to load generated image
-                            </Typography>
-                          </Box>
-                        </Box>
-                      )}
-                      
-                      {result.creative.image_description && (
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="h6" gutterBottom>📝 Image Description</Typography>
-                          <Box sx={{ pl: 2, borderLeft: '3px solid #3B82F6' }}>
-                            <Typography variant="body2">{result.creative.image_description}</Typography>
-                          </Box>
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                  
-                  <Divider sx={{ my: 2 }} />
-                  
-                  {result.validation && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        🔍 Quality Validation
-                      </Typography>
-                      
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                        <Chip 
-                          label={result.validation.is_valid ? 'Valid ✅' : 'Invalid ❌'} 
-                          color={result.validation.is_valid ? 'success' : 'error'}
-                        />
-                        <Typography variant="body1">
-                          Quality Score: <strong>{result.validation.quality_score?.toFixed(1)}%</strong>
-                        </Typography>
-                      </Box>
-                      
-                      {/* Enhanced Quality Analysis Display */}
-                      {result.validation.quality_analysis && (
-                        <Box sx={{ 
-                          mb: 2, 
-                          p: 2, 
-                          backgroundColor: '#f8f9fa', 
-                          borderRadius: 2,
-                          border: '1px solid #e9ecef'
-                        }}>
-                          <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 1 }}>
-                            🎯 AI Quality Analysis
-                          </Typography>
-                          
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                            <Chip 
-                              label={`Score: ${result.validation.quality_analysis.overall_score}/10`}
-                              color={result.validation.quality_analysis.overall_score >= 8 ? 'success' : 
-                                     result.validation.quality_analysis.overall_score >= 7 ? 'warning' : 'error'}
-                              size="small"
-                            />
-                            <Chip 
-                              label={result.validation.quality_analysis.was_enhanced ? '✨ Enhanced' : '✅ Original Quality'}
-                              color={result.validation.quality_analysis.was_enhanced ? 'primary' : 'success'}
-                              size="small"
-                              variant="outlined"
-                            />
-                          </Box>
-                          
-                          <Typography variant="body2" sx={{ mb: 1, fontStyle: 'italic' }}>
-                            "{result.validation.quality_analysis.analysis}"
-                          </Typography>
-                          
-                          <Typography variant="caption" color="text.secondary">
-                            {result.validation.quality_analysis.processing_note}
-                          </Typography>
-                          
-                          {result.validation.quality_analysis.scores && (
-                            <Box sx={{ mt: 2 }}>
-                              <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
-                                📊 Detailed Scores:
-                              </Typography>
-                              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
-                                {Object.entries(result.validation.quality_analysis.scores).map(([key, value]) => (
-                                  <Box key={key} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <Typography variant="caption" sx={{ textTransform: 'capitalize' }}>
-                                      {key.replace('_', ' ')}:
-                                    </Typography>
-                                    <Typography variant="caption" fontWeight="bold">
-                                      {value}/10
-                                    </Typography>
-                                  </Box>
-                                ))}
-                              </Box>
-                            </Box>
-                          )}
-                        </Box>
-                      )}
-                      
-                      {result.validation.feedback && result.validation.feedback.length > 0 && (
-                        <Box sx={{ mb: 2 }}>
-                          <Typography variant="subtitle1" fontWeight="bold">📝 Feedback:</Typography>
-                          {result.validation.feedback.map((feedback, index) => (
-                            <Typography key={index} variant="body2" sx={{ ml: 2 }}>• {feedback}</Typography>
-                          ))}
-                        </Box>
-                      )}
-                      
-                      {result.validation.suggestions && result.validation.suggestions.length > 0 && (
-                        <Box>
-                          <Typography variant="subtitle1" fontWeight="bold">💡 Suggestions:</Typography>
-                          {result.validation.suggestions.map((suggestion, index) => (
-                            <Typography key={index} variant="body2" sx={{ ml: 2 }}>• {suggestion}</Typography>
-                          ))}
-                        </Box>
-                      )}
-                    </Box>
-                  )}
-                  
-                  {result.generation_metadata && (
-                    <Box sx={{ mb: 2 }}>
-                      <Typography variant="h6" gutterBottom>📊 Generation Metadata</Typography>
-                      <Typography variant="body2">
-                        Attempts: {result.generation_metadata.attempts || 1}
-                      </Typography>
-                      <Typography variant="body2">
-                        Total Time: {result.generation_metadata.total_time_seconds?.toFixed(2)}s
-                      </Typography>
-                    </Box>
-                  )}
-                  
-                  <Button
-                    variant="outlined"
-                    onClick={validateCreative}
-                    disabled={loading || !result.creative}
-                    sx={{ mt: 2 }}
-                  >
-                    {loading ? <CircularProgress size={20} /> : '🔍 Re-validate'}
-                  </Button>
-                </CardContent>
-              </StyledCard>
-            )}
-            
-            {!result && !error && (
-              <StyledCard>
-                <CardContent sx={{ textAlign: 'center', py: 6 }}>
-                  <Typography variant="h6" color="text.secondary">
-                    🎯 Configure your brand settings and click "Generate Creative" to see the AI in action!
-                  </Typography>
-                </CardContent>
-              </StyledCard>
-            )}
-          </Grid>
-        </Grid>
-        
-        {/* Brand Colors Preview */}
-        <StyledCard sx={{ mt: 4 }}>
+        <StyledCard>
           <CardContent>
-            <Typography variant="h6" gutterBottom>🎨 Brand Colors Preview</Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <ColorChip label="Primary" bgcolor={formData.primaryColor} />
-              <ColorChip label="Secondary" bgcolor={formData.secondaryColor} />
-            </Box>
+            <Typography variant="h6" gutterBottom>
+              Step 1: Call Webhook
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              This will call the n8n webhook and show you the raw response structure
+            </Typography>
+            
+            <Button
+              variant="contained"
+              onClick={callWebhook}
+              disabled={loading}
+              size="large"
+              sx={{ mb: 2 }}
+            >
+              {loading ? <CircularProgress size={24} /> : '📡 Call Webhook'}
+            </Button>
+
+            {rawResponse && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  📄 Raw Response
+                </Typography>
+                <Paper sx={{ p: 2, backgroundColor: '#f5f5f5', maxHeight: '300px', overflow: 'auto' }}>
+                  <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px', margin: 0 }}>
+                    {typeof rawResponse === 'string' ? rawResponse : JSON.stringify(rawResponse, null, 2)}
+                  </pre>
+                </Paper>
+                {(() => {
+                  try {
+                    const parsed = typeof rawResponse === 'string' ? JSON.parse(rawResponse) : rawResponse;
+                    if (parsed.base64_length) {
+                      return (
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                          ℹ️ Base64 data has been truncated for display. Full length: {parsed.base64_length} characters
+                        </Typography>
+                      );
+                    }
+                  } catch (e) {
+                    // Not JSON, ignore
+                  }
+                  return null;
+                })()}
+              </Box>
+            )}
+          </CardContent>
+        </StyledCard>
+
+        <StyledCard>
+           <CardContent>
+             <Typography variant="h6" gutterBottom>
+               Step 2: Transform Binary Data (Optional)
+             </Typography>
+             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+               {transformedImages.length > 0 
+                 ? 'Binary data was automatically processed! You can re-process if needed.'
+                 : 'This will extract and display images from the binary data in the response'
+               }
+             </Typography>
+             
+             <Button
+               variant={transformedImages.length > 0 ? "outlined" : "contained"}
+               onClick={transformBinaryData}
+               disabled={!rawResponse}
+               size="large"
+               sx={{ mb: 2 }}
+             >
+               {transformedImages.length > 0 ? '🔄 Re-process Data' : '🔄 Transform Binary Data to Images'}
+             </Button>
+
+            {transformedImages.length > 0 && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  🖼️ Generated Images ({transformedImages.length})
+                </Typography>
+                <Box sx={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                  gap: 3,
+                  mt: 2 
+                }}>
+                  {transformedImages.map((image) => (
+                    <Box 
+                      key={image.id} 
+                      sx={{ 
+                        border: 1, 
+                        borderColor: 'grey.300', 
+                        borderRadius: 2, 
+                        p: 2,
+                        backgroundColor: 'grey.50',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        '&:hover': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: 3
+                        }
+                      }}
+                    >
+                      <img 
+                        src={image.url} 
+                        alt={image.filename}
+                        style={{ 
+                          width: '100%', 
+                          height: '200px', 
+                          objectFit: 'contain',
+                          borderRadius: '4px',
+                          backgroundColor: 'white'
+                        }}
+                      />
+                      <Box sx={{ mt: 2 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                          {image.filename}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Format: {image.format?.toUpperCase() || 'PNG'}
+                        </Typography>
+                        {image.source && (
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Source: {image.source}
+                          </Typography>
+                        )}
+                        {image.size && (
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            Size: {(image.size / 1024).toFixed(1)} KB
+                          </Typography>
+                        )}
+                        {image.metadata && (
+                          <Box sx={{ mt: 1, pt: 1, borderTop: 1, borderColor: 'grey.200' }}>
+                            {image.metadata.headline && (
+                              <Typography variant="caption" color="primary" display="block" sx={{ fontWeight: 'bold' }}>
+                                📝 {image.metadata.headline}
+                              </Typography>
+                            )}
+                            {image.metadata.sub_headline && (
+                              <Typography variant="caption" color="text.secondary" display="block">
+                                📄 {image.metadata.sub_headline}
+                              </Typography>
+                            )}
+                            {image.metadata.cta && (
+                              <Typography variant="caption" color="success.main" display="block">
+                                🎯 {image.metadata.cta}
+                              </Typography>
+                            )}
+                            {image.metadata.recommended_scenery && (
+                              <Typography variant="caption" color="text.secondary" display="block">
+                                🎨 {image.metadata.recommended_scenery}
+                              </Typography>
+                            )}
+                            {image.metadata.is_favorite && (
+                              <Typography variant="caption" color="warning.main" display="block">
+                                ⭐ Favorite
+                              </Typography>
+                            )}
+                            {image.metadata.type && (
+                              <Typography variant="caption" color="text.secondary" display="block">
+                                🏷️ {image.metadata.type}
+                              </Typography>
+                            )}
+                          </Box>
+                        )}
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            )}
+          </CardContent>
+        </StyledCard>
+
+        {error && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        <StyledCard>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              🔍 Debug Information
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Check the browser console (F12) for detailed debugging logs<br/>
+              • Look for logs starting with 🔍 to see the response structure<br/>
+              • The raw response will show you exactly what n8n is sending<br/>
+              • The transform step will show how many images are actually processed
+            </Typography>
           </CardContent>
         </StyledCard>
       </Container>
